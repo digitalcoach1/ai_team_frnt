@@ -1,46 +1,57 @@
 "use client"
 
 import type React from "react"
-import Link from "next/link"
+
 import { useState, useEffect, useRef } from "react"
-
-interface Message {
-  text: string
-  sender: "ai" | "user"
-  time: string
-}
-
-interface Chat {
-  messages: Message[]
-  lastUpdated: string
-  title: string
-}
-
-interface Chats {
-  [key: string]: Chat
-}
+import { UserButton } from "@clerk/nextjs"
+import Link from "next/link"
+import { Home } from "lucide-react"
 
 export default function AlexAIPage() {
-  const [currentChatId, setCurrentChatId] = useState("default")
-  const [chats, setChats] = useState<Chats>({})
-  const [sidebarVisible, setSidebarVisible] = useState(true)
+  const [messages, setMessages] = useState<
+    Array<{ sender: string; text: string; time: string; attachments?: Array<{ name: string }> }>
+  >([])
   const [inputValue, setInputValue] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [useMemory, setUseMemory] = useState(true)
+  const [sidebarVisible, setSidebarVisible] = useState(true)
+  const [currentChatId, setCurrentChatId] = useState("default")
+  const [chats, setChats] = useState<Record<string, any>>({})
+  const [pendingFiles, setPendingFiles] = useState<File[]>([])
+  const [showUploadModal, setShowUploadModal] = useState(false)
+  const [modalFiles, setModalFiles] = useState<File[]>([])
+
   const chatMessagesRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const CURRENT_NAMESPACE = useRef<string>("")
 
   const N8N_ENDPOINT =
     "https://n8n-c2lq.onrender.com/webhook/65c03f65-d13c-43c7-967d-708dcceef965/chat?action=sendMessage"
 
   useEffect(() => {
-    const savedChats = localStorage.getItem("alex-ai-chats")
-    const savedSidebar = localStorage.getItem("alex-ai-sidebar-visible")
-
-    if (savedChats) {
-      setChats(JSON.parse(savedChats))
+    let ns = localStorage.getItem("Namespace")
+    if (!ns) {
+      ns = generateUUID()
+      localStorage.setItem("Namespace", ns)
     }
-    if (savedSidebar !== null) {
-      setSidebarVisible(savedSidebar !== "false")
+    CURRENT_NAMESPACE.current = ns
+
+    const savedMemory = localStorage.getItem("alex-ai-use-memory")
+    setUseMemory(savedMemory !== "false")
+
+    const savedSidebar = localStorage.getItem("alex-ai-sidebar-visible")
+    setSidebarVisible(savedSidebar !== "false")
+
+    const savedChats = JSON.parse(localStorage.getItem("alex-ai-chats") || "{}")
+    setChats(savedChats)
+
+    if (Object.keys(savedChats).length > 0) {
+      const sortedIds = Object.keys(savedChats).sort((a, b) => savedChats[b].timestamp - savedChats[a].timestamp)
+      const lastChatId = sortedIds[0]
+      setCurrentChatId(lastChatId)
+      setMessages(savedChats[lastChatId].messages || [])
+    } else {
+      createNewChat()
     }
   }, [])
 
@@ -48,106 +59,295 @@ export default function AlexAIPage() {
     if (chatMessagesRef.current) {
       chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight
     }
-  }, [chats, currentChatId])
+  }, [messages])
 
-  const currentChat = chats[currentChatId] || {
-    messages: [
-      {
-        text: "Ciao! Sono Alex AI, il tuo Cross-Platform Ads Strategist di livello mondiale specializzato nella creazione e ottimizzazione di campagne pubblicitarie integrate. Come posso supportarti oggi?",
-        sender: "ai" as const,
-        time: "Ora",
-      },
-    ],
-    lastUpdated: new Date().toISOString(),
-    title: "Nuova Conversazione",
+  useEffect(() => {
+    localStorage.setItem("alex-ai-use-memory", String(useMemory))
+  }, [useMemory])
+
+  useEffect(() => {
+    localStorage.setItem("alex-ai-sidebar-visible", String(sidebarVisible))
+  }, [sidebarVisible])
+
+  function generateUUID(): string {
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0
+      const v = c === "x" ? r : (r & 0x3) | 0x8
+      return v.toString(16)
+    })
   }
 
-  const toggleSidebar = () => {
-    const newState = !sidebarVisible
-    setSidebarVisible(newState)
-    localStorage.setItem("alex-ai-sidebar-visible", String(newState))
+  function generateSessionId(): string {
+    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   }
 
-  const createNewChat = () => {
-    const newChatId = "chat_" + Date.now()
+  function createNewChat() {
+    const newChatId = generateSessionId()
     setCurrentChatId(newChatId)
-    setChats((prev) => ({
-      ...prev,
-      [newChatId]: {
-        messages: [
-          {
-            text: "Ciao! Sono Alex AI, il tuo Cross-Platform Ads Strategist. Come posso aiutarti oggi?",
-            sender: "ai",
-            time: new Date().toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }),
-          },
-        ],
-        lastUpdated: new Date().toISOString(),
-        title: "Nuova Conversazione",
-      },
-    }))
-  }
-
-  const loadChat = (chatId: string) => {
-    setCurrentChatId(chatId)
-  }
-
-  const deleteChat = (chatId: string, e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (!confirm("Sei sicuro di voler eliminare questa conversazione?")) return
-
-    const newChats = { ...chats }
-    delete newChats[chatId]
-    setChats(newChats)
-    localStorage.setItem("alex-ai-chats", JSON.stringify(newChats))
-
-    if (chatId === currentChatId) {
-      const remaining = Object.keys(newChats)
-      if (remaining.length) {
-        setCurrentChatId(remaining[0])
-      } else {
-        createNewChat()
-      }
-    }
-  }
-
-  const sendMessage = async () => {
-    const message = inputValue.trim()
-    if (!message || isLoading) return
-
-    setIsLoading(true)
-    const userMessage: Message = {
-      text: message,
-      sender: "user",
+    localStorage.setItem("alex-ai-session-id", newChatId)
+    const welcomeMsg = {
+      sender: "ai",
+      text: "Ciao! Sono Alex AI, il tuo Cross-Platform Ads Strategist di livello mondiale specializzato nella creazione e ottimizzazione di campagne pubblicitarie integrate. Come posso supportarti oggi?",
       time: new Date().toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }),
     }
+    setMessages([welcomeMsg])
+    setPendingFiles([])
+    setInputValue("")
+    saveChat(newChatId, [welcomeMsg], "Nuova Chat")
+  }
 
-    const updatedMessages = [...currentChat.messages, userMessage]
+  function saveChat(chatId: string, msgs: any[], title?: string) {
+    const chatTitle =
+      title || chats[chatId]?.title || msgs.find((m) => m.sender === "ai")?.text?.substring(0, 30) || "Nuova Chat"
     const updatedChats = {
       ...chats,
-      [currentChatId]: {
-        ...currentChat,
-        messages: updatedMessages,
-        lastUpdated: new Date().toISOString(),
+      [chatId]: {
+        title: chatTitle,
+        messages: msgs,
+        timestamp: Date.now(),
       },
     }
     setChats(updatedChats)
+    localStorage.setItem("alex-ai-chats", JSON.stringify(updatedChats))
+  }
+
+  function loadChat(chatId: string) {
+    if (!chats[chatId]) return
+    setCurrentChatId(chatId)
+    setMessages(chats[chatId].messages || [])
+    localStorage.setItem("alex-ai-session-id", chatId)
+  }
+
+  function deleteChat(chatId: string) {
+    if (!confirm("Sei sicuro di voler eliminare questa chat?")) return
+    const updatedChats = { ...chats }
+    delete updatedChats[chatId]
+    setChats(updatedChats)
+    localStorage.setItem("alex-ai-chats", JSON.stringify(updatedChats))
+    if (chatId === currentChatId) {
+      createNewChat()
+    }
+  }
+
+  function cleanText(s: string): string {
+    return (s || "")
+      .replace(/\u0000/g, "")
+      .replace(/\r/g, "")
+      .replace(/[ \t]+\n/g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim()
+  }
+
+  function chunkSmart(text: string, size = 1000, overlap = 200): string[] {
+    text = cleanText(text)
+    const chunks: string[] = []
+    const words = text.split(/\s+/)
+    let current = ""
+
+    for (const word of words) {
+      if ((current + " " + word).length <= size) {
+        current += (current ? " " : "") + word
+      } else {
+        if (current) chunks.push(current)
+        current = word
+      }
+    }
+    if (current) chunks.push(current)
+
+    if (overlap > 0 && chunks.length > 1) {
+      const out = [chunks[0]]
+      for (let i = 1; i < chunks.length; i++) {
+        const tail = out[out.length - 1].slice(-overlap)
+        out.push((tail + "\n" + chunks[i]).slice(0, size + overlap))
+      }
+      return out
+    }
+    return chunks
+  }
+
+  async function embedBatch(texts: string[]): Promise<number[][]> {
+    const res = await fetch("https://api.openai.com/v1/embeddings", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.NEXT_PUBLIC_OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ model: process.env.NEXT_PUBLIC_OPENAI_MODEL || "text-embedding-3-large", input: texts }),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(`OpenAI embeddings failed: ${res.status}`)
+    return data.data.map((d: any) => d.embedding)
+  }
+
+  async function upsertVectors(vectors: any[]): Promise<any> {
+    const url = `${process.env.NEXT_PUBLIC_PINECONE_HOST}/vectors/upsert`
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Api-Key": process.env.NEXT_PUBLIC_PINECONE_API_KEY || "",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ namespace: CURRENT_NAMESPACE.current, vectors }),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(`Pinecone upsert failed: ${res.status}`)
+    return data
+  }
+
+  async function fileToText(file: File): Promise<string> {
+    const ext = file.name.split(".").pop()?.toLowerCase() || ""
+    const ab = await file.arrayBuffer()
+
+    if (ext === "pdf") {
+      try {
+        const pdfjsLib = await import("pdfjs-dist")
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`
+        const pdf = await pdfjsLib.getDocument({ data: ab }).promise
+        let fullText = ""
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i)
+          const content = await page.getTextContent()
+          fullText += content.items.map((item: any) => item.str).join(" ") + "\n\n"
+        }
+        return cleanText(fullText)
+      } catch (error) {
+        console.error("[v0] PDF parsing error:", error)
+        return ""
+      }
+    }
+
+    if (ext === "docx") {
+      try {
+        const mammoth = await import("mammoth")
+        const result = await mammoth.extractRawText({ arrayBuffer: ab })
+        return cleanText(result.value)
+      } catch (error) {
+        console.error("[v0] DOCX parsing error:", error)
+        return ""
+      }
+    }
+
+    if (ext === "xlsx" || ext === "xls") {
+      try {
+        const XLSX = await import("xlsx")
+        const workbook = XLSX.read(ab, { type: "array" })
+        let allText = ""
+        workbook.SheetNames.forEach((name) => {
+          const worksheet = workbook.Sheets[name]
+          const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: true }) as any[]
+          rows.forEach((row) => {
+            allText += (row || []).join(" | ") + "\n"
+          })
+          allText += "\n"
+        })
+        return cleanText(allText)
+      } catch (error) {
+        console.error("[v0] XLSX parsing error:", error)
+        return ""
+      }
+    }
+
+    return cleanText(new TextDecoder().decode(ab))
+  }
+
+  async function indexFilesToPinecone(files: File[]): Promise<void> {
+    const nowIso = new Date().toISOString()
+    const all: Array<{ id: string; text: string; metadata: any }> = []
+
+    for (const f of files) {
+      const text = await fileToText(f)
+      if (!text.trim()) continue
+      const chunks = chunkSmart(text, 1000, 200)
+      const docId = `${f.name}:${Date.now()}`
+      chunks.forEach((c, i) =>
+        all.push({
+          id: `${docId}#${i}`,
+          text: c,
+          metadata: {
+            text: c,
+            file_name: f.name,
+            doc_id: docId,
+            chunk_index: i,
+            source: f.type || f.name.split(".").pop(),
+            size_bytes: f.size || 0,
+            uploaded_at: nowIso,
+            app: "AlexAI-Uploader",
+            chat_id: currentChatId,
+          },
+        }),
+      )
+    }
+
+    if (!all.length) return
+
+    for (let i = 0; i < all.length; i += 100) {
+      const batch = all.slice(i, i + 100)
+      const embs = await embedBatch(batch.map((d) => d.text))
+      const vecs = batch.map((d, idx) => ({ id: d.id, values: embs[idx], metadata: d.metadata }))
+      await upsertVectors(vecs)
+    }
+  }
+
+  async function upsertMessageToPinecone(message: string, sender: string): Promise<boolean> {
+    try {
+      const sessionId = localStorage.getItem("alex-ai-session-id") || generateSessionId()
+      const nowIso = new Date().toISOString()
+      const messageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+
+      const embeddings = await embedBatch([message])
+      if (!embeddings || !embeddings[0]) throw new Error("Failed to generate embedding")
+
+      const vector = {
+        id: messageId,
+        values: embeddings[0],
+        metadata: {
+          text: message,
+          sender: sender,
+          session_id: sessionId,
+          chat_id: currentChatId,
+          timestamp: nowIso,
+          source: "alex-ai-chat-message",
+          app: "AlexAI",
+          namespace: CURRENT_NAMESPACE.current,
+        },
+      }
+      await upsertVectors([vector])
+      return true
+    } catch (error) {
+      console.error(`[v0] Failed to upsert ${sender} message:`, error)
+      return false
+    }
+  }
+
+  async function sendMessage() {
+    const message = inputValue.trim()
+    if (!message && pendingFiles.length === 0) return
+
+    setIsLoading(true)
+    const userMsg = {
+      sender: "user",
+      text: message || "📎 Allegati",
+      time: new Date().toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }),
+      attachments: pendingFiles.map((f) => ({ name: f.name })),
+    }
+    const newMessages = [...messages, userMsg]
+    setMessages(newMessages)
     setInputValue("")
 
-    const thinkingMessage: Message = {
-      text: "...",
-      sender: "ai",
-      time: "",
+    if (pendingFiles.length) {
+      try {
+        await indexFilesToPinecone(pendingFiles)
+      } catch (e) {
+        console.error("[v0] Attachment indexing error:", e)
+      }
+      setPendingFiles([])
     }
-    setChats((prev) => ({
-      ...prev,
-      [currentChatId]: {
-        ...prev[currentChatId],
-        messages: [...prev[currentChatId].messages, thinkingMessage],
-      },
-    }))
+
+    const thinkingMsg = { sender: "ai", text: "...", time: "Ora" }
+    setMessages([...newMessages, thinkingMsg])
 
     try {
-      const sessionId = localStorage.getItem("alex-ai-session-id") || Math.random().toString(36).slice(2, 11)
+      const sessionId = localStorage.getItem("alex-ai-session-id") || generateSessionId()
       localStorage.setItem("alex-ai-session-id", sessionId)
 
       const res = await fetch(N8N_ENDPOINT, {
@@ -158,268 +358,574 @@ export default function AlexAIPage() {
         },
         body: JSON.stringify({
           action: "sendMessage",
-          chatInput: message,
+          chatInput: message || "(allegati inviati)",
           sessionId,
-          metadata: { source: "alex-ai-chat" },
+          useMemory,
+          metadata: {
+            source: "alex-ai-chat",
+            attachments: pendingFiles.length > 0,
+            namespace: CURRENT_NAMESPACE.current,
+          },
         }),
       })
 
       if (!res.ok) throw new Error("HTTP error " + res.status)
 
       const reader = res.body?.getReader()
+      if (!reader) throw new Error("No reader available")
+
       const decoder = new TextDecoder("utf-8")
       let buffer = ""
       let rawText = ""
+      let generatedTitle = null
 
-      if (reader) {
-        while (true) {
-          const { value, done } = await reader.read()
-          if (done) break
+      const handleEvent = (jsonStr: string) => {
+        let obj: any
+        try {
+          obj = JSON.parse(jsonStr)
+        } catch {
+          return
+        }
+        if (obj.type === "item" && typeof obj.content === "string") {
+          rawText += obj.content
+          setMessages((prev) => {
+            const updated = [...prev]
+            updated[updated.length - 1] = {
+              sender: "ai",
+              text: rawText,
+              time: new Date().toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }),
+            }
+            return updated
+          })
+        } else if (obj.type === "end" && obj.title) {
+          generatedTitle = obj.title
+        }
+      }
 
-          buffer += decoder.decode(value, { stream: true })
-          const lines = buffer.split(/\r?\n/)
-          buffer = lines.pop() || ""
+      while (true) {
+        const { value, done } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
 
-          for (const line of lines) {
-            const trimmed = line.trim()
-            if (!trimmed) continue
-
-            try {
-              const obj = JSON.parse(trimmed.replace(/^data:\s?/, ""))
-              if (obj.type === "item" && typeof obj.content === "string") {
-                rawText += obj.content
-
-                setChats((prev) => {
-                  const messages = [...prev[currentChatId].messages]
-                  messages[messages.length - 1] = {
-                    text: rawText,
-                    sender: "ai",
-                    time: new Date().toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }),
-                  }
-                  return {
-                    ...prev,
-                    [currentChatId]: {
-                      ...prev[currentChatId],
-                      messages,
-                      lastUpdated: new Date().toISOString(),
-                    },
-                  }
-                })
-              }
-            } catch {}
+        const lines = buffer.split(/\r?\n/)
+        buffer = lines.pop() || ""
+        for (const line of lines) {
+          const trimmed = line.trim()
+          if (trimmed.startsWith("data:")) {
+            const jsonStr = trimmed.replace(/^data:\s?/, "")
+            if (jsonStr) handleEvent(jsonStr)
+          } else if (trimmed) {
+            handleEvent(trimmed)
           }
         }
       }
 
-      const finalChats = { ...chats }
-      if (finalChats[currentChatId]) {
-        const userMessages = finalChats[currentChatId].messages.filter((m) => m.sender === "user")
-        if (userMessages.length >= 2) {
-          finalChats[currentChatId].title = userMessages[1].text.substring(0, 40) + "..."
-        } else if (userMessages.length === 1) {
-          finalChats[currentChatId].title = userMessages[0].text.substring(0, 40) + "..."
-        }
-      }
-      localStorage.setItem("alex-ai-chats", JSON.stringify(finalChats))
+      const finalMessages = [
+        ...newMessages,
+        {
+          sender: "ai",
+          text: rawText || "Mi dispiace, non ho ricevuto una risposta valida.",
+          time: new Date().toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }),
+        },
+      ]
+      setMessages(finalMessages)
+      saveChat(currentChatId, finalMessages, generatedTitle || undefined)
     } catch (err) {
       console.error("[v0] Error with streaming request:", err)
-      setChats((prev) => {
-        const messages = [...prev[currentChatId].messages]
-        messages[messages.length - 1] = {
-          text: "Errore di connessione. Riprova più tardi.",
-          sender: "ai",
-          time: new Date().toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }),
-        }
-        return {
-          ...prev,
-          [currentChatId]: {
-            ...prev[currentChatId],
-            messages,
-          },
-        }
-      })
+      const errorMsg = {
+        sender: "ai",
+        text: "Errore di connessione. Riprova più tardi.",
+        time: new Date().toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }),
+      }
+      setMessages([...newMessages, errorMsg])
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
-      sendMessage()
+      if ((inputValue.trim() || pendingFiles.length > 0) && !isLoading) sendMessage()
     }
   }
 
-  const chatItems = Object.entries(chats)
-    .sort(([, a], [, b]) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime())
-    .slice(0, 10)
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setModalFiles((prev) => [...prev, ...Array.from(e.target.files!)])
+    }
+  }
+
+  const attachFilesToChat = () => {
+    setPendingFiles((prev) => [...prev, ...modalFiles])
+    setModalFiles([])
+    setShowUploadModal(false)
+  }
+
+  const formatMessageText = (text: string) => {
+    let t = text.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    t = t.replace(/\*(.+?)\*/g, "<em>$1</em>")
+    t = t.replace(/`([^`]+?)`/g, "<code>$1</code>")
+    t = t.replace(/\[([^\]]+?)\]\$\$(https?:\/\/[^\s)]+)\$\$/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+    t = t.replace(/\n/g, "<br>")
+    return t
+  }
 
   return (
-    <div className="w-full h-screen overflow-hidden bg-white border-4 border-[#235E84] flex">
-      {/* Sidebar */}
-      <div
-        className={`${sidebarVisible ? "w-80" : "w-0"} transition-all duration-300 overflow-hidden bg-white border-r border-gray-200 flex flex-col`}
-      >
-        <div className="p-5 border-b border-gray-200">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#235E84] flex items-center justify-center text-white font-semibold">
-                AA
+    <>
+      <style jsx global>{`
+        .alex-ai-container * { margin: 0; padding: 0; box-sizing: border-box; }
+        .alex-ai-container { width: 100%; height: 100vh; font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; position: relative; overflow: hidden; background: #ffffff; }
+        .alex-ai-app { background: #ffffff; width: 100%; height: 100%; display: flex; overflow: hidden; position: relative; }
+        .alex-ai-sidebar { width: 320px; min-width: 320px; background: #ffffff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; transition: all 0.3s; position: relative; }
+        .alex-ai-sidebar.hidden { width: 0; min-width: 0; overflow: hidden; border-right: none; }
+        .alex-ai-sidebar-header { padding: 20px; border-bottom: 1px solid #e2e8f0; background: #ffffff; }
+        .alex-ai-brand-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+        .alex-ai-brand-section { display: flex; align-items: center; gap: 12px; }
+        .alex-ai-brand-title { font-family: 'Montserrat', sans-serif; font-size: 20px; font-weight: 600; color: #475569; }
+        .alex-ai-profile-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; background: #235E84; }
+        .alex-ai-profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .alex-ai-new-chat-btn { background: #235E84; border: none; color: #ffffff; padding: 14px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; width: 100%; }
+        .alex-ai-new-chat-btn:hover { background: #1a4a68; transform: translateY(-1px); }
+        .alex-ai-memory-toggle { display: flex; align-items: center; justify-content: space-between; padding: 16px 0 0 0; font-size: 14px; font-weight: 500; color: #475569; }
+        .alex-ai-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .alex-ai-switch input { opacity: 0; width: 0; height: 0; }
+        .alex-ai-slider { position: absolute; cursor: pointer; inset: 0; background-color: #ccc; transition: 0.4s; border-radius: 24px; }
+        .alex-ai-slider:before { position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: 0.4s; border-radius: 50%; }
+        .alex-ai-switch input:checked + .alex-ai-slider { background-color: #235E84; }
+        .alex-ai-switch input:checked + .alex-ai-slider:before { transform: translateX(20px); }
+        .alex-ai-sidebar-split { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+        .alex-ai-chat-list-wrapper { flex: 1 1 50%; overflow-y: auto; padding: 16px 20px; min-height: 100px; }
+        .alex-ai-chat-item { padding: 16px; border-radius: 8px; cursor: pointer; transition: all 0.2s; margin-bottom: 2px; background: transparent; position: relative; display: flex; justify-content: space-between; align-items: center; }
+        .alex-ai-chat-item:hover { background: #E3F2FD; }
+        .alex-ai-chat-item.active { background: #E3F2FD; color: #235E84; }
+        .alex-ai-chat-item-content { flex: 1; }
+        .alex-ai-chat-item-title { font-weight: 500; font-size: 14px; color: #475569; margin-bottom: 4px; }
+        .alex-ai-chat-item-subtitle { font-size: 12px; color: #64748b; }
+        .alex-ai-delete-btn { opacity: 0; background: #ef4444; border: none; color: white; width: 24px; height: 24px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; font-size: 12px; }
+        .alex-ai-chat-item:hover .alex-ai-delete-btn { opacity: 1; }
+        .alex-ai-delete-btn:hover { background: #dc2626; }
+        .alex-ai-agents-section { flex: 1 1 50%; min-height: 150px; margin-top: 0; padding: 16px 20px; padding-top: 16px; border-top: 1px solid #e2e8f0; display: flex; flex-direction: column; }
+        .alex-ai-agents-title { font-family: 'Montserrat', sans-serif; font-size: 16px; font-weight: 600; color: #475569; margin-bottom: 16px; padding: 0 4px; flex-shrink: 0; }
+        .alex-ai-agents-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .alex-ai-agent-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; text-decoration: none; color: #475569; transition: background-color 0.2s; }
+        .alex-ai-agent-item:hover { background-color: #E3F2FD; }
+        .alex-ai-agent-avatar { width: 32px; height: 32px; border-radius: 50%; background: #f8fafc; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; color: #64748b; }
+        .alex-ai-agent-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .alex-ai-agent-name { font-size: 14px; font-weight: 500; }
+        .alex-ai-chat-container { flex: 1; display: flex; flex-direction: column; min-width: 0; background: #ffffff; position: relative; }
+        .alex-ai-chat-header { background: #235E84; color: #ffffff; padding: 20px 40px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; min-height: 80px; }
+        .alex-ai-header-left { display: flex; align-items: center; gap: 16px; }
+        .alex-ai-header-right { display: flex; gap: 12px; align-items: center; }
+        .alex-ai-toggle-btn { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); padding: 10px; border-radius: 8px; cursor: pointer; color: #ffffff; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+        .alex-ai-toggle-btn:hover { background: rgba(255, 255, 255, 0.2); }
+        .alex-ai-chat-title { font-family: 'Montserrat', sans-serif; font-size: 20px; font-weight: 600; color: #ffffff; }
+        .alex-ai-home-btn { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); padding: 10px 14px; border-radius: 8px; cursor: pointer; color: #ffffff; transition: all 0.2s; display: flex; align-items: center; gap: 8px; text-decoration: none; font-size: 14px; font-weight: 500; }
+        .alex-ai-home-btn:hover { background: rgba(255, 255, 255, 0.2); }
+        .alex-ai-messages { flex: 1; overflow-y: auto; padding: 50px 80px; background: #ffffff; min-height: 0; }
+        .alex-ai-message { margin-bottom: 32px; display: flex; align-items: flex-start; gap: 20px; max-width: 90%; }
+        .alex-ai-message.user { flex-direction: row-reverse; margin-left: auto; }
+        .alex-ai-message-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; flex-shrink: 0; overflow: hidden; }
+        .alex-ai-message-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .alex-ai-message.ai .alex-ai-message-avatar { background: linear-gradient(135deg, #235E84 0%, #1a4a68 100%); color: #ffffff; }
+        .alex-ai-message.user .alex-ai-message-avatar { background: #E3F2FD; color: #235E84; }
+        .alex-ai-message-content { flex: 1; background: #ffffff; padding: 20px 24px; border-radius: 12px; border: 1px solid #e2e8f0; min-width: 200px; }
+        .alex-ai-message.user .alex-ai-message-content { background: #235E84; color: #ffffff; border-color: #235E84; }
+        .alex-ai-message-text { color: #334155; line-height: 1.6; font-size: 15px; }
+        .alex-ai-message.user .alex-ai-message-text { color: #ffffff; }
+        .alex-ai-message-time { font-size: 12px; color: #64748b; margin-top: 8px; }
+        .alex-ai-message.user .alex-ai-message-time { color: rgba(255, 255, 255, 0.7); }
+        .alex-ai-attachment-list { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+        .alex-ai-attachment-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; font-size: 12px; background: #f8fafc; color: #334155; border: 1px solid #e2e8f0; }
+        .alex-ai-message.user .alex-ai-attachment-pill { background: rgba(255, 255, 255, 0.15); color: #fff; border-color: rgba(255, 255, 255, 0.25); }
+        .alex-ai-input-container { padding: 30px 80px; border-top: 1px solid #e2e8f0; background: #ffffff; }
+        .alex-ai-input-wrapper { display: flex; align-items: flex-end; gap: 12px; background: #ffffff; border: 2px solid #e2e8f0; border-radius: 12px; padding: 12px 16px; transition: all 0.2s; }
+        .alex-ai-input-wrapper:focus-within { border-color: #235E84; box-shadow: 0 0 0 3px rgba(35, 94, 132, 0.1); }
+        .alex-ai-input { flex: 1; border: none; outline: none; background: transparent; font-size: 15px; color: #475569; resize: none; min-height: 24px; max-height: 120px; font-family: inherit; }
+        .alex-ai-input::placeholder { color: #64748b; }
+        .alex-ai-attach-btn { position: relative; background: transparent; border: 2px solid #e2e8f0; color: #475569; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: all 0.2s; }
+        .alex-ai-attach-btn:hover { background: #E3F2FD; border-color: #235E84; color: #235E84; transform: scale(1.05); }
+        .alex-ai-attach-badge { position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: #ef4444; color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+        .alex-ai-send-btn { background: #235E84; border: none; color: #ffffff; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
+        .alex-ai-send-btn:hover:not(:disabled) { background: #1a4a68; transform: scale(1.05); }
+        .alex-ai-send-btn:disabled { background: #cbd5e1; color: #64748b; cursor: not-allowed; }
+        .alex-ai-thinking { display: flex; align-items: center; gap: 5px; }
+        .alex-ai-thinking .dot { width: 8px; height: 8px; background-color: #64748b; border-radius: 50%; animation: thinking 1.4s infinite ease-in-out both; }
+        .alex-ai-thinking .dot:nth-child(2) { animation-delay: 0.2s; }
+        .alex-ai-thinking .dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes thinking { 0%, 60%, 100% { transform: translateY(0); opacity: 0.4; } 30% { transform: translateY(-10px); opacity: 1; } }
+        .alex-ai-modal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .alex-ai-modal-card { width: min(980px, 95vw); background: #0f172a; color: #e5e7eb; border-radius: 14px; border: 2px solid #235E84; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45); overflow: hidden; }
+        .alex-ai-modal-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: #235E84; color: #fff; font-weight: 700; }
+        .alex-ai-modal-body { padding: 16px; }
+        .alex-ai-modal-drop { border: 2px dashed #334155; border-radius: 14px; padding: 18px; text-align: center; background: #111827; }
+        .alex-ai-modal-files { margin-top: 10px; }
+        .alex-ai-modal-filepill { display: inline-block; margin: 4px 6px 0 0; padding: 4px 8px; border-radius: 999px; border: 1px solid #334155; background: #0b1220; font-size: 12px; }
+        .alex-ai-modal-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+        .alex-ai-modal-btn { background: #235E84; color: #fff; border: 0; padding: 10px 14px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+        .alex-ai-modal-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .alex-ai-modal-close { background: rgba(255, 255, 255, 0.15); color: #fff; border: 1px solid rgba(255, 255, 255, 0.25); padding: 8px 10px; border-radius: 8px; cursor: pointer; }
+      `}</style>
+
+      <div className="alex-ai-container">
+        <div className="alex-ai-app">
+          <div className={`alex-ai-sidebar ${!sidebarVisible ? "hidden" : ""}`}>
+            <div className="alex-ai-sidebar-header">
+              <div className="alex-ai-brand-header">
+                <div className="alex-ai-brand-section">
+                  <div className="alex-ai-profile-avatar">
+                    <img
+                      src="https://www.ai-scaleup.com/wp-content/uploads/2025/03/David-AI-Ai-Specialist-social-ads.png"
+                      alt="Alex AI"
+                    />
+                  </div>
+                  <div className="alex-ai-brand-title">Alex AI</div>
+                </div>
               </div>
-              <div className="font-semibold text-lg">Alex AI</div>
+              <button className="alex-ai-new-chat-btn" onClick={createNewChat}>
+                <span>+</span> Nuova Chat
+              </button>
+              <div className="alex-ai-memory-toggle">
+                <label htmlFor="memoryToggle">Usa Memoria</label>
+                <label className="alex-ai-switch">
+                  <input
+                    type="checkbox"
+                    id="memoryToggle"
+                    checked={useMemory}
+                    onChange={(e) => setUseMemory(e.target.checked)}
+                  />
+                  <span className="alex-ai-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div className="alex-ai-sidebar-split">
+              <div className="alex-ai-chat-list-wrapper">
+                {Object.keys(chats)
+                  .sort((a, b) => chats[b].timestamp - chats[a].timestamp)
+                  .map((id) => (
+                    <div
+                      key={id}
+                      className={`alex-ai-chat-item ${id === currentChatId ? "active" : ""}`}
+                      onClick={() => loadChat(id)}
+                    >
+                      <div className="alex-ai-chat-item-content">
+                        <div className="alex-ai-chat-item-title">{chats[id].title || "Nuova Chat"}</div>
+                        <div className="alex-ai-chat-item-subtitle">
+                          {new Date(chats[id].timestamp).toLocaleString("it-IT", {
+                            day: "numeric",
+                            month: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </div>
+                      </div>
+                      <button
+                        className="alex-ai-delete-btn"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          deleteChat(id)
+                        }}
+                      >
+                        ✖
+                      </button>
+                    </div>
+                  ))}
+              </div>
+
+              <div className="alex-ai-agents-section">
+                <h3 className="alex-ai-agents-title">AGENTI AI:</h3>
+                <div className="alex-ai-agents-list">
+                  <a
+                    href="https://members.digital-coach.com/products/tony-ai"
+                    target="_blank"
+                    className="alex-ai-agent-item"
+                    rel="noreferrer"
+                  >
+                    <div className="alex-ai-agent-avatar">
+                      <img
+                        src="https://www.ai-scaleup.com/wp-content/uploads/2025/02/Tony-AI-strategiest.png"
+                        alt="Tony"
+                      />
+                    </div>
+                    <span className="alex-ai-agent-name">Tony AI</span>
+                  </a>
+                  <a
+                    href="https://members.digital-coach.com/products/aladdin-ai"
+                    target="_blank"
+                    className="alex-ai-agent-item"
+                    rel="noreferrer"
+                  >
+                    <div className="alex-ai-agent-avatar">
+                      <img
+                        src="https://www.ai-scaleup.com/wp-content/uploads/2025/02/Aladdin-AI-consultant.png"
+                        alt="Aladino"
+                      />
+                    </div>
+                    <span className="alex-ai-agent-name">Aladino AI</span>
+                  </a>
+                  <a
+                    href="https://members.digital-coach.com/products/lara-ai"
+                    target="_blank"
+                    className="alex-ai-agent-item"
+                    rel="noreferrer"
+                  >
+                    <div className="alex-ai-agent-avatar">
+                      <img
+                        src="https://www.ai-scaleup.com/wp-content/uploads/2025/02/Lara-AI-social-strategiest.png"
+                        alt="Lara"
+                      />
+                    </div>
+                    <span className="alex-ai-agent-name">Lara AI</span>
+                  </a>
+                  <a
+                    href="https://members.digital-coach.com/products/simone-ai"
+                    target="_blank"
+                    className="alex-ai-agent-item"
+                    rel="noreferrer"
+                  >
+                    <div className="alex-ai-agent-avatar">
+                      <img
+                        src="https://www.ai-scaleup.com/wp-content/uploads/2025/02/Simone-AI-seo-copy.png"
+                        alt="Simone"
+                      />
+                    </div>
+                    <span className="alex-ai-agent-name">Simone AI</span>
+                  </a>
+                  <a
+                    href="https://members.digital-coach.com/products/mike-ai"
+                    target="_blank"
+                    className="alex-ai-agent-item"
+                    rel="noreferrer"
+                  >
+                    <div className="alex-ai-agent-avatar">
+                      <img
+                        src="https://www.ai-scaleup.com/wp-content/uploads/2025/02/Mike-AI-digital-marketing-mg.png"
+                        alt="Mike"
+                      />
+                    </div>
+                    <span className="alex-ai-agent-name">Mike AI</span>
+                  </a>
+                  <a
+                    href="https://members.digital-coach.com/products/valentina-ai"
+                    target="_blank"
+                    className="alex-ai-agent-item"
+                    rel="noreferrer"
+                  >
+                    <div className="alex-ai-agent-avatar">
+                      <img
+                        src="https://www.ai-scaleup.com/wp-content/uploads/2025/03/Valentina-AI-AI-SEO-optimizer.png"
+                        alt="Valentina"
+                      />
+                    </div>
+                    <span className="alex-ai-agent-name">Valentina AI</span>
+                  </a>
+                  <a
+                    href="https://members.digital-coach.com/products/niko-ai"
+                    target="_blank"
+                    className="alex-ai-agent-item"
+                    rel="noreferrer"
+                  >
+                    <div className="alex-ai-agent-avatar">
+                      <img src="https://www.ai-scaleup.com/wp-content/uploads/2025/02/Niko-AI.png" alt="Niko" />
+                    </div>
+                    <span className="alex-ai-agent-name">Niko AI</span>
+                  </a>
+                  <a
+                    href="https://members.digital-coach.com/products/jim-ai"
+                    target="_blank"
+                    className="alex-ai-agent-item"
+                    rel="noreferrer"
+                  >
+                    <div className="alex-ai-agent-avatar">
+                      <img
+                        src="https://www.ai-scaleup.com/wp-content/uploads/2025/02/Jim-AI-%E2%80%93-AI-Coach.png"
+                        alt="Jim"
+                      />
+                    </div>
+                    <span className="alex-ai-agent-name">Jim AI</span>
+                  </a>
+                  <a
+                    href="https://members.digital-coach.com/products/daniele-ai"
+                    target="_blank"
+                    className="alex-ai-agent-item"
+                    rel="noreferrer"
+                  >
+                    <div className="alex-ai-agent-avatar">
+                      <img
+                        src="https://www.ai-scaleup.com/wp-content/uploads/2024/11/Gary-AI-SMMg-icon.png"
+                        alt="Daniele"
+                      />
+                    </div>
+                    <span className="alex-ai-agent-name">Daniele AI</span>
+                  </a>
+                  <a
+                    href="https://members.digital-coach.com/products/alex-ai-2-0"
+                    target="_blank"
+                    className="alex-ai-agent-item"
+                    rel="noreferrer"
+                  >
+                    <div className="alex-ai-agent-avatar">
+                      <img
+                        src="https://www.ai-scaleup.com/wp-content/uploads/2025/03/David-AI-Ai-Specialist-social-ads.png"
+                        alt="Alex"
+                      />
+                    </div>
+                    <span className="alex-ai-agent-name">Alex AI</span>
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
-          <button
-            onClick={createNewChat}
-            className="w-full bg-[#235E84] text-white py-3 px-5 rounded-lg font-medium hover:bg-[#1a4a66] transition-all flex items-center justify-center gap-2"
-          >
-            <span>+</span> Nuova Chat
-          </button>
-        </div>
-        <div className="flex-1 overflow-y-auto">
-          {chatItems.map(([id, chat]) => (
-            <div
-              key={id}
-              onClick={() => loadChat(id)}
-              className={`p-4 cursor-pointer hover:bg-blue-50 transition-all flex justify-between items-center ${
-                id === currentChatId ? "bg-blue-100" : ""
-              }`}
-            >
-              <div className="flex-1">
-                <div className="font-medium text-sm text-gray-800">{chat.title}</div>
-                <div className="text-xs text-gray-500">{new Date(chat.lastUpdated).toLocaleDateString("it-IT")}</div>
+
+          <div className="alex-ai-chat-container">
+            <div className="alex-ai-chat-header">
+              <div className="alex-ai-header-left">
+                <button className="alex-ai-toggle-btn" onClick={() => setSidebarVisible(!sidebarVisible)}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    {sidebarVisible ? (
+                      <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+                    ) : (
+                      <path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z" />
+                    )}
+                  </svg>
+                </button>
+                <div className="alex-ai-chat-title">Alex AI - Cross-platform ADs Manager</div>
               </div>
-              <button
-                onClick={(e) => deleteChat(id, e)}
-                className="opacity-0 hover:opacity-100 bg-red-500 text-white w-6 h-6 rounded flex items-center justify-center text-xs hover:bg-red-600 transition-all"
-              >
-                🗑
+              <div className="alex-ai-header-right">
+                <Link href="/" className="alex-ai-home-btn">
+                  <Home size={18} />
+                  Home
+                </Link>
+                <UserButton
+                  appearance={{
+                    elements: {
+                      avatarBox: "w-10 h-10",
+                    },
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="alex-ai-messages" ref={chatMessagesRef}>
+              {messages.map((msg, idx) => (
+                <div key={idx} className={`alex-ai-message ${msg.sender}`}>
+                  <div className="alex-ai-message-avatar">
+                    <img
+                      src="https://www.ai-scaleup.com/wp-content/uploads/2025/03/David-AI-Ai-Specialist-social-ads.png"
+                      alt={msg.sender === "user" ? "User" : "Alex AI"}
+                    />
+                  </div>
+                  <div className="alex-ai-message-content">
+                    <div className="alex-ai-message-text">
+                      {msg.text === "..." ? (
+                        <div className="alex-ai-thinking">
+                          <div className="dot"></div>
+                          <div className="dot"></div>
+                          <div className="dot"></div>
+                        </div>
+                      ) : (
+                        <span dangerouslySetInnerHTML={{ __html: formatMessageText(msg.text) }} />
+                      )}
+                    </div>
+                    {msg.attachments && msg.attachments.length > 0 && (
+                      <div className="alex-ai-attachment-list">
+                        {msg.attachments.map((att, i) => (
+                          <span key={i} className="alex-ai-attachment-pill">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M16.5 6.5l-7.78 7.78a3 3 0 104.24 4.24l7.78-7.78a5 5 0 10-7.07-7.07L5.1 10.24a7 7 0 109.9 9.9l6.36-6.36-1.41-1.41-6.36 6.36a5 5 0 11-7.07-7.07l8.48-8.49a3 3 0 114.24 4.25l-7.79 7.78a1 1 0 01-1.41-1.41L15.09 8" />
+                            </svg>
+                            <span>{att.name}</span>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {msg.text !== "..." && <div className="alex-ai-message-time">{msg.time}</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="alex-ai-input-container">
+              <div className="alex-ai-input-wrapper">
+                <button className="alex-ai-attach-btn" onClick={() => setShowUploadModal(true)}>
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                    <path d="M16.5 6.5l-7.78 7.78a3 3 0 104.24 4.24l7.78-7.78a5 5 0 10-7.07-7.07L5.1 10.24a7 7 0 109.9 9.9l6.36-6.36-1.41-1.41-6.36 6.36a5 5 0 11-7.07-7.07l8.48-8.49a3 3 0 114.24 4.25l-7.79 7.78a1 1 0 01-1.41-1.41L15.09 8" />
+                  </svg>
+                  {pendingFiles.length > 0 && <span className="alex-ai-attach-badge">{pendingFiles.length}</span>}
+                </button>
+                <textarea
+                  ref={textareaRef}
+                  className="alex-ai-input"
+                  placeholder="Scrivi la tua domanda per Alex..."
+                  value={inputValue}
+                  onChange={(e) => {
+                    setInputValue(e.target.value)
+                    e.target.style.height = "auto"
+                    e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px"
+                  }}
+                  onKeyDown={handleKeyDown}
+                  disabled={isLoading}
+                  rows={1}
+                />
+                <button
+                  className="alex-ai-send-btn"
+                  onClick={sendMessage}
+                  disabled={(!inputValue.trim() && pendingFiles.length === 0) || isLoading}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {showUploadModal && (
+        <div className="alex-ai-modal" onClick={() => setShowUploadModal(false)}>
+          <div className="alex-ai-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="alex-ai-modal-head">
+              <div>Seleziona i file da allegare alla chat</div>
+              <button className="alex-ai-modal-close" onClick={() => setShowUploadModal(false)}>
+                Chiudi ✕
               </button>
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Chat Container */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Header */}
-        <div className="bg-[#235E84] text-white py-5 px-10 flex items-center justify-between min-h-[80px]">
-          <div className="flex items-center gap-4">
-            <Link
-              href="/"
-              className="bg-white/10 border border-white/20 p-2 rounded-lg hover:bg-white/20 transition-all"
-              title="Torna alla dashboard"
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                <polyline points="9 22 9 12 15 12 15 22" />
-              </svg>
-            </Link>
-            <button
-              onClick={toggleSidebar}
-              className="bg-white/10 border border-white/20 p-2 rounded-lg hover:bg-white/20 transition-all"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                {sidebarVisible ? (
-                  <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
-                ) : (
-                  <path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z" />
-                )}
-              </svg>
-            </button>
-            <div className="font-semibold text-xl">Alex AI - ADs Manager</div>
-          </div>
-        </div>
-
-        {/* Messages */}
-        <div ref={chatMessagesRef} className="flex-1 overflow-y-auto py-12 px-20 bg-white">
-          {currentChat.messages.map((msg, idx) => (
-            <div
-              key={idx}
-              className={`mb-8 flex items-start gap-5 ${
-                msg.sender === "user" ? "flex-row-reverse ml-auto" : ""
-              } max-w-[90%]`}
-            >
-              <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm flex-shrink-0 ${
-                  msg.sender === "ai"
-                    ? "bg-gradient-to-br from-[#235E84] to-[#1a4a66] text-white"
-                    : "bg-blue-100 text-[#235E84]"
-                }`}
-              >
-                {msg.sender === "ai" ? "AA" : "U"}
-              </div>
-              <div
-                className={`flex-1 p-5 rounded-xl ${
-                  msg.sender === "user" ? "bg-[#235E84] text-white" : "bg-white border border-gray-200"
-                }`}
-              >
-                <div
-                  className={`leading-relaxed text-[15px] whitespace-pre-wrap ${msg.sender === "ai" ? "text-black" : ""}`}
-                >
-                  {msg.text === "..." ? (
-                    <div className="flex gap-1">
-                      <div
-                        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                        style={{ animationDelay: "0s" }}
-                      ></div>
-                      <div
-                        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                        style={{ animationDelay: "0.2s" }}
-                      ></div>
-                      <div
-                        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                        style={{ animationDelay: "0.4s" }}
-                      ></div>
-                    </div>
-                  ) : (
-                    msg.text
-                  )}
+            <div className="alex-ai-modal-body">
+              <div className="alex-ai-modal-drop">
+                <strong>Trascina qui i file</strong> oppure{" "}
+                <label htmlFor="fileInput" style={{ textDecoration: "underline", cursor: "pointer", color: "#93c5fd" }}>
+                  sfoglia
+                </label>
+                <input
+                  id="fileInput"
+                  type="file"
+                  multiple
+                  accept=".pdf,.docx,.txt,.md,.csv,.xlsx,.xls"
+                  onChange={handleFileSelect}
+                  style={{ display: "none" }}
+                />
+                <div className="alex-ai-modal-files">
+                  {modalFiles.map((f, i) => (
+                    <span key={i} className="alex-ai-modal-filepill">
+                      {f.name}
+                    </span>
+                  ))}
                 </div>
-                {msg.time && (
-                  <div className={`text-xs mt-2 ${msg.sender === "user" ? "text-white/70" : "text-gray-500"}`}>
-                    {msg.time}
-                  </div>
-                )}
+                <div style={{ opacity: 0.75, fontSize: "12px", marginTop: "6px" }}>
+                  PDF, DOCX, TXT/MD, CSV, XLS/XLSX
+                </div>
+              </div>
+              <div className="alex-ai-modal-row">
+                <button className="alex-ai-modal-btn" onClick={attachFilesToChat} disabled={modalFiles.length === 0}>
+                  Allega alla chat
+                </button>
               </div>
             </div>
-          ))}
-        </div>
-
-        {/* Input */}
-        <div className="py-8 px-20 border-t border-gray-200 bg-white">
-          <div className="flex items-end gap-3 bg-white border-2 border-gray-200 rounded-xl p-3 focus-within:border-[#235E84] transition-all">
-            <textarea
-              ref={textareaRef}
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Scrivi la tua domanda per Alex..."
-              className="flex-1 border-none outline-none bg-transparent text-[15px] text-black resize-none min-h-[24px] max-h-[120px]"
-              rows={1}
-              disabled={isLoading}
-            />
-            <button
-              onClick={sendMessage}
-              disabled={!inputValue.trim() || isLoading}
-              className="bg-[#235E84] text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-[#1a4a66] disabled:bg-gray-300 disabled:cursor-not-allowed transition-all flex-shrink-0"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-              </svg>
-            </button>
           </div>
         </div>
-      </div>
-    </div>
+      )}
+    </>
   )
 }
