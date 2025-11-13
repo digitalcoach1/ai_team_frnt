@@ -13,13 +13,13 @@ const agents = [
   },
   {
     name: "Tony AI",
-    role: "Consulente Vendite Digitale",
+    role: "Direttore Commerciale",
     image: "https://www.ai-scaleup.com/wp-content/uploads/2025/02/Tony-AI-strategiest.png",
     href: "/dashboard/tony-ai",
   },
   {
     name: "Aladino AI",
-    role: "Consulente di Nuovi Servizi",
+    role: "Creatore di nuove offerte e prodotti",
     image: "https://www.ai-scaleup.com/wp-content/uploads/2025/02/Aladdin-AI-consultant.png",
     href: "/dashboard/aladino-ai",
   },
@@ -37,7 +37,7 @@ const agents = [
   },
   {
     name: "Mike AI",
-    role: "Consulente Marketing Digitale",
+    role: "Direttore Marketing",
     image: "https://www.ai-scaleup.com/wp-content/uploads/2025/02/Mike-AI-digital-marketing-mg.png",
     href: "/dashboard/mike-ai",
   },
@@ -55,14 +55,14 @@ const agents = [
   },
   {
     name: "Jim AI",
-    role: "Digital Sales Coach",
+    role: "Coach di Vendite",
     image: "https://www.ai-scaleup.com/wp-content/uploads/2025/02/Jim-AI-%E2%80%93-AI-Coach.png",
     href: "/dashboard/jim-ai",
   },
   {
     name: "Daniele AI",
-    role: "Specialista per Landing Page e Funnel",
-    image: "https://www.ai-scaleup.com/wp-content/uploads/2024/11/Gary-AI-SMMg-icon.png",
+    role: "Copywriter per Vendere (Direct Response)",
+    image: "https://www.ai-scaleup.com/wp-content/uploads/2025/11/daniele_ai_direct_response_copywriter.png",
     href: "/dashboard/daniele-ai",
   },
 ]
@@ -72,9 +72,9 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen bg-muted">
-      <div className="mx-auto w-[90%] max-w-[1200px] px-5 py-10">
+      <div className="mx-auto w-[90%] max-w-[1200px] py-10">
         {/* Header Section */}
-        <header className="mb-12 rounded-xl bg-[#235E84] px-5 py-[30px] text-center shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)]">
+        <header className="relative mb-12 rounded-xl bg-[#235E84] px-5 py-[30px] text-center shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)]">
           {user && (
             <div className="absolute right-5 top-5">
               <UserButton />
