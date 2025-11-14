@@ -405,11 +405,129 @@ export default function DanieleAIPage() {
             opacity: 1;
           }
         }
+
+        @media (max-width: 1024px) {
+          .sidebar {
+            width: 280px !important;
+            min-width: 280px !important;
+          }
+          .chat-messages {
+            padding: 30px 40px !important;
+          }
+          .input-container {
+            padding: 20px 40px !important;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .sidebar {
+            position: fixed !important;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            z-index: 1000;
+            transform: translateX(-100%);
+            box-shadow: none;
+          }
+          .sidebar.visible {
+            transform: translateX(0);
+            box-shadow: 4px 0 12px rgba(0, 0, 0, 0.1);
+          }
+          .chat-header {
+            padding: 16px 20px !important;
+            min-height: 70px !important;
+          }
+          .chat-header-title {
+            font-size: 16px !important;
+          }
+          .chat-messages {
+            padding: 20px 16px !important;
+          }
+          .message-container {
+            max-width: 100% !important;
+          }
+          .input-container {
+            padding: 16px !important;
+          }
+          .hamburger-menu {
+            display: flex !important;
+          }
+          .desktop-toggle {
+            display: none !important;
+          }
+          .close-sidebar-btn {
+            display: flex !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .chat-header {
+            padding: 12px 16px !important;
+            min-height: 60px !important;
+          }
+          .chat-header-title {
+            font-size: 14px !important;
+          }
+          .sidebar-header {
+            padding: 16px !important;
+          }
+          .sidebar-title {
+            font-size: 18px !important;
+          }
+          .avatar-large {
+            width: 32px !important;
+            height: 32px !important;
+          }
+          .avatar-small {
+            width: 32px !important;
+            height: 32px !important;
+          }
+          .new-chat-btn {
+            padding: 12px 16px !important;
+            font-size: 13px !important;
+          }
+          .chat-messages {
+            padding: 16px 12px !important;
+          }
+          .message-bubble {
+            padding: 16px 18px !important;
+            font-size: 14px !important;
+          }
+          .input-container {
+            padding: 12px !important;
+          }
+        }
+
+        @media (max-width: 360px) {
+          .chat-header-title {
+            font-size: 12px !important;
+          }
+          .sidebar-title {
+            font-size: 16px !important;
+          }
+          .avatar-large {
+            width: 28px !important;
+            height: 28px !important;
+          }
+          .message-bubble {
+            padding: 14px 16px !important;
+            font-size: 13px !important;
+          }
+        }
+
+        .hamburger-menu {
+          display: none;
+        }
+
+        .close-sidebar-btn {
+          display: none;
+        }
       `}</style>
 
       <div style={{ width: "100%", height: "100vh", display: "flex", overflow: "hidden", background: "#ffffff" }}>
         {/* Sidebar */}
         <div
+          className={`sidebar ${sidebarVisible ? "visible" : ""}`}
           style={{
             width: sidebarVisible ? "320px" : "0",
             minWidth: sidebarVisible ? "320px" : "0",
@@ -422,12 +540,13 @@ export default function DanieleAIPage() {
           }}
         >
           {/* Sidebar Header */}
-          <div style={{ padding: "20px", borderBottom: "1px solid #e2e8f0" }}>
+          <div className="sidebar-header" style={{ padding: "20px", borderBottom: "1px solid #e2e8f0" }}>
             <div
               style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                 <div
+                  className="avatar-large"
                   style={{
                     width: "40px",
                     height: "40px",
@@ -440,21 +559,46 @@ export default function DanieleAIPage() {
                   }}
                 >
                   <img
-                    src="https://www.ai-scaleup.com/wp-content/uploads/2025/11/daniele_ai_direct_response_copywriter.png"
+                    src="https://www.ai-scaleup.com/wp-content/uploads/2024/11/Gary-AI-SMMg-icon.png"
                     alt="Daniele AI"
                     style={{ width: "100%", height: "100%", objectFit: "cover" }}
                   />
                 </div>
                 <div
+                  className="sidebar-title"
                   style={{ fontFamily: "Montserrat, sans-serif", fontSize: "20px", fontWeight: 600, color: "#475569" }}
                 >
                   Daniele AI
                 </div>
               </div>
+              <button
+                className="close-sidebar-btn"
+                onClick={() => {
+                  setSidebarVisible(false)
+                  localStorage.setItem("daniele-ai-sidebar-visible", "false")
+                }}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "#475569",
+                  cursor: "pointer",
+                  padding: "8px",
+                  borderRadius: "4px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "20px",
+                  lineHeight: 1,
+                }}
+                title="Chiudi menu"
+              >
+                ×
+              </button>
             </div>
 
             <button
               onClick={createNewChat}
+              className="new-chat-btn"
               style={{
                 background: "#235E84",
                 border: "none",
@@ -531,7 +675,7 @@ export default function DanieleAIPage() {
           </div>
 
           {/* Chat List */}
-          <div style={{ flex: "1 1 50%", overflowY: "auto", padding: "16px 20px", minHeight: "100px" }}>
+          <div style={{ flex: "0 1 auto", maxHeight: "40%", overflowY: "auto", padding: "16px 20px", minHeight: 0 }}>
             {sortedChats.map(([id, chat]) => {
               const dateObj = new Date(chat.lastUpdated)
               const monthNames = ["gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic"]
@@ -592,8 +736,8 @@ export default function DanieleAIPage() {
           {/* Agents Section */}
           <div
             style={{
-              flex: "1 1 50%",
-              minHeight: "150px",
+              flex: "1 1 auto",
+              minHeight: 0,
               padding: "16px 20px",
               borderTop: "1px solid #e2e8f0",
               display: "flex",
@@ -611,7 +755,9 @@ export default function DanieleAIPage() {
             >
               AGENTI AI:
             </h3>
-            <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div
+              style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "8px", minHeight: 0 }}
+            >
               {[
                 {
                   name: "Tony AI",
@@ -686,6 +832,7 @@ export default function DanieleAIPage() {
         <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, background: "#ffffff" }}>
           {/* Chat Header */}
           <div
+            className="chat-header"
             style={{
               background: "#235E84",
               color: "#ffffff",
@@ -697,8 +844,35 @@ export default function DanieleAIPage() {
               minHeight: "80px",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "16px", flex: 1, minWidth: 0 }}>
               <button
+                className="hamburger-menu"
+                onClick={() => {
+                  setSidebarVisible(true)
+                  localStorage.setItem("daniele-ai-sidebar-visible", "true")
+                }}
+                style={{
+                  background: "rgba(255,255,255,0.1)",
+                  border: "1px solid rgba(255, 255, 255, 0.2)",
+                  padding: "10px",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  color: "#ffffff",
+                  display: "none",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+                title="Mostra menu"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
+              </button>
+              <button
+                className="desktop-toggle"
                 onClick={() => {
                   setSidebarVisible(!sidebarVisible)
                   localStorage.setItem("daniele-ai-sidebar-visible", String(!sidebarVisible))
@@ -713,6 +887,7 @@ export default function DanieleAIPage() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  flexShrink: 0,
                 }}
                 title="Mostra/Nascondi conversazioni"
               >
@@ -724,12 +899,22 @@ export default function DanieleAIPage() {
                   )}
                 </svg>
               </button>
-              <div style={{ fontFamily: "Montserrat, sans-serif", fontSize: "20px", fontWeight: 600 }}>
+              <div
+                className="chat-header-title"
+                style={{
+                  fontFamily: "Montserrat, sans-serif",
+                  fontSize: "20px",
+                  fontWeight: 600,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
                 Daniele AI - Copywriter per Vendere (Direct Response)
               </div>
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "16px", flexShrink: 0 }}>
               <Link
                 href="/"
                 style={{
@@ -749,7 +934,10 @@ export default function DanieleAIPage() {
               >
                 <Home size={20} />
               </Link>
-              <div style={{ width: "40px", height: "40px", borderRadius: "50%", overflow: "hidden" }}>
+              <div
+                className="avatar-small"
+                style={{ width: "40px", height: "40px", borderRadius: "50%", overflow: "hidden" }}
+              >
                 <UserButton
                   appearance={{
                     elements: {
@@ -762,10 +950,14 @@ export default function DanieleAIPage() {
           </div>
 
           {/* Messages */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "50px 80px", background: "#ffffff" }}>
+          <div
+            className="chat-messages"
+            style={{ flex: 1, overflowY: "auto", padding: "50px 80px", background: "#ffffff" }}
+          >
             {messages.map((message, index) => (
               <div
                 key={index}
+                className="message-container"
                 style={{
                   marginBottom: "32px",
                   display: "flex",
@@ -797,7 +989,7 @@ export default function DanieleAIPage() {
                   <img
                     src={
                       message.sender === "ai"
-                        ? "https://www.ai-scaleup.com/wp-content/uploads/2025/11/daniele_ai_direct_response_copywriter.png"
+                        ? "https://www.ai-scaleup.com/wp-content/uploads/2024/11/Gary-AI-SMMg-icon.png"
                         : "https://www.shutterstock.com/image-vector/vector-flat-illustration-grayscale-avatar-600nw-2264922221.jpg"
                     }
                     alt={message.sender === "ai" ? "Daniele AI" : "Cliente"}
@@ -806,6 +998,7 @@ export default function DanieleAIPage() {
                 </div>
 
                 <div
+                  className="message-bubble"
                   style={{
                     flex: 1,
                     background: message.sender === "user" ? "#235E84" : "#ffffff",
@@ -861,7 +1054,10 @@ export default function DanieleAIPage() {
           </div>
 
           {/* Input */}
-          <div style={{ padding: "30px 80px", borderTop: "1px solid #e2e8f0", background: "#ffffff" }}>
+          <div
+            className="input-container"
+            style={{ padding: "30px 80px", borderTop: "1px solid #e2e8f0", background: "#ffffff" }}
+          >
             <div
               style={{
                 display: "flex",
@@ -925,3 +1121,4 @@ export default function DanieleAIPage() {
     </>
   )
 }
+

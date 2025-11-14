@@ -154,7 +154,7 @@ export default function AladinoAI() {
       '<code style="background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace;">$1</code>',
     )
     formatted = formatted.replace(
-      /\[([^\]]+?)\]$$(https?:\/\/[^\s)]+)$$/g,
+      /\[([^\]]+?)\]\$\$(https?:\/\/[^\s)]+)\$\$/g,
       '<a href="$2" target="_blank" rel="noopener noreferrer" style="color: #235E84; text-decoration: underline;">$1</a>',
     )
     formatted = formatted.replace(/\n/g, "<br>")
@@ -421,6 +421,27 @@ export default function AladinoAI() {
           display: flex;
           align-items: center;
           gap: 12px;
+        }
+        
+        /* Added styles for sidebar close button */
+        .aladino-sidebar-close-btn {
+          display: none;
+          background: transparent;
+          border: none;
+          color: var(--sidebar-foreground);
+          width: 32px;
+          height: 32px;
+          border-radius: 6px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          align-items: center;
+          justify-content: center;
+          padding: 0;
+        }
+        
+        .aladino-sidebar-close-btn:hover {
+          background: var(--muted);
+          color: var(--primary);
         }
         
         .aladino-profile-avatar {
@@ -981,6 +1002,282 @@ export default function AladinoAI() {
         .aladino-agents-list::-webkit-scrollbar-thumb:hover {
           background: var(--muted-foreground);
         }
+        
+        /* Added responsive breakpoints for all screen sizes */
+        
+        /* Tablet and smaller devices (max-width: 1024px) */
+        @media (max-width: 1024px) {
+          .aladino-sidebar {
+            width: 280px;
+            min-width: 280px;
+          }
+          
+          .aladino-header {
+            padding: 16px 24px;
+            min-height: 70px;
+          }
+          
+          .aladino-title {
+            font-size: 18px;
+          }
+          
+          .aladino-messages {
+            padding: 40px 40px;
+          }
+          
+          .aladino-input-container {
+            padding: 20px 40px;
+          }
+          
+          .aladino-message {
+            max-width: 95%;
+          }
+        }
+        
+        /* Mobile devices (max-width: 768px) */
+        @media (max-width: 768px) {
+          /* Added mobile menu bar button styles */
+          .aladino-mobile-menu-btn {
+            display: flex;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #ffffff;
+            transition: all 0.2s ease;
+            align-items: center;
+            justify-content: center;
+          }
+          
+          .aladino-mobile-menu-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+          }
+          
+          /* Show close button on mobile sidebar */
+          .aladino-sidebar-close-btn {
+            display: flex;
+          }
+          
+          /* Show hamburger menu on mobile, hide toggle button */
+          .aladino-mobile-menu-btn {
+            display: flex;
+          }
+          
+          .aladino-toggle-btn {
+            display: none;
+          }
+          
+          .aladino-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            max-width: 320px;
+            height: 100vh;
+            z-index: 1000;
+            box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
+          }
+          
+          .aladino-sidebar.hidden {
+            transform: translateX(-100%);
+          }
+          
+          .aladino-header {
+            padding: 12px 16px;
+            min-height: 60px;
+          }
+          
+          .aladino-title {
+            font-size: 16px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 180px;
+          }
+          
+          .aladino-messages {
+            padding: 24px 16px;
+          }
+          
+          .aladino-input-container {
+            padding: 16px;
+          }
+          
+          .aladino-message {
+            gap: 12px;
+            margin-bottom: 24px;
+            max-width: 100%;
+          }
+          
+          .aladino-message-avatar {
+            width: 32px;
+            height: 32px;
+            font-size: 12px;
+          }
+          
+          .aladino-message-content {
+            padding: 16px;
+          }
+          
+          .aladino-message-text {
+            font-size: 14px;
+          }
+          
+          .aladino-input-wrapper {
+            padding: 10px 12px;
+          }
+          
+          .aladino-input {
+            font-size: 14px;
+          }
+          
+          .aladino-send-btn,
+          .aladino-file-btn {
+            width: 36px;
+            height: 36px;
+          }
+        }
+        
+        /* Small mobile devices (max-width: 480px) */
+        @media (max-width: 480px) {
+          .aladino-sidebar {
+            max-width: 280px;
+          }
+          
+          .aladino-sidebar-header {
+            padding: 16px;
+          }
+          
+          .aladino-brand-title {
+            font-size: 18px;
+          }
+          
+          .aladino-profile-avatar {
+            width: 36px;
+            height: 36px;
+          }
+          
+          .aladino-new-chat-button {
+            padding: 12px 16px;
+            font-size: 13px;
+          }
+          
+          .aladino-header {
+            padding: 10px 12px;
+            min-height: 56px;
+          }
+          
+          .aladino-title {
+            font-size: 14px;
+            max-width: 140px;
+          }
+          
+          .aladino-home-btn,
+          .aladino-toggle-btn {
+            width: 36px;
+            height: 36px;
+            padding: 8px;
+          }
+          
+          .aladino-user-btn {
+            width: 36px;
+            height: 36px;
+          }
+          
+          .aladino-messages {
+            padding: 16px 12px;
+          }
+          
+          .aladino-message {
+            gap: 8px;
+            margin-bottom: 20px;
+          }
+          
+          .aladino-message-avatar {
+            width: 28px;
+            height: 28px;
+          }
+          
+          .aladino-message-content {
+            padding: 12px 14px;
+          }
+          
+          .aladino-message-text {
+            font-size: 13px;
+          }
+          
+          .aladino-message-time {
+            font-size: 11px;
+          }
+          
+          .aladino-input-container {
+            padding: 12px;
+          }
+          
+          .aladino-input-wrapper {
+            padding: 8px 10px;
+          }
+          
+          .aladino-input {
+            font-size: 13px;
+          }
+          
+          .aladino-send-btn,
+          .aladino-file-btn {
+            width: 32px;
+            height: 32px;
+          }
+          
+          .aladino-chat-list-wrapper,
+          .aladino-agents-section {
+            padding: 12px 16px;
+          }
+          
+          .aladino-chat-item {
+            padding: 12px;
+          }
+          
+          .aladino-chat-item-title {
+            font-size: 13px;
+          }
+          
+          .aladino-chat-item-subtitle {
+            font-size: 11px;
+          }
+          
+          .aladino-agent-item {
+            padding: 8px 10px;
+          }
+          
+          .aladino-agent-avatar {
+            width: 28px;
+            height: 28px;
+          }
+          
+          .aladino-agent-name {
+            font-size: 13px;
+          }
+        }
+        
+        /* Extra small devices (max-width: 360px) */
+        @media (max-width: 360px) {
+          .aladino-title {
+            max-width: 100px;
+          }
+          
+          .aladino-header-right {
+            gap: 8px;
+          }
+          
+          .aladino-message-content {
+            padding: 10px 12px;
+          }
+          
+          .aladino-message-text {
+            font-size: 12px;
+          }
+        }
       `}</style>
 
       <div className="aladino-container">
@@ -996,6 +1293,19 @@ export default function AladinoAI() {
                 </div>
                 <div className="aladino-brand-title">Aladino AI</div>
               </div>
+              <button
+                className="aladino-sidebar-close-btn"
+                onClick={() => {
+                  setSidebarVisible(false)
+                  localStorage.setItem("aladino-ai-sidebar-visible", "false")
+                }}
+                title="Chiudi"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
             </div>
             <button className="aladino-new-chat-button" onClick={createNewChat}>
               <span>+</span> Nuova Chat
@@ -1197,6 +1507,20 @@ export default function AladinoAI() {
         <div className="aladino-main">
           <div className="aladino-header">
             <div className="aladino-header-left">
+              <button
+                className="aladino-mobile-menu-btn"
+                onClick={() => {
+                  setSidebarVisible(!sidebarVisible)
+                  localStorage.setItem("aladino-ai-sidebar-visible", String(!sidebarVisible))
+                }}
+                title="Menu"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
+              </button>
               <button
                 className="aladino-toggle-btn"
                 onClick={() => {

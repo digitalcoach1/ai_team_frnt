@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from "react"
 
 import { UserButton } from "@clerk/nextjs"
 import Link from "next/link"
-import { Home } from "lucide-react"
+import { Home } from 'lucide-react'
 
 export default function MikeAIChat() {
   const [chats, setChats] = useState<any>({})
@@ -1408,11 +1408,64 @@ export default function MikeAIChat() {
           cursor: pointer;
         }
 
-        @media (max-width: 768px) {
+        /* Adding responsive design for mobile and tablet */
+        /* Hamburger menu button - visible only on mobile */
+        .mobile-menu-btn {
+          display: none;
+          background: rgba(255,255,255,.1);
+          border: 1px solid rgba(255,255,255,.2);
+          padding: 8px;
+          border-radius: 8px;
+          cursor: pointer;
+          color: #ffffff;
+          transition: all .2s ease;
+          align-items: center;
+          justify-content: center;
+          width: 40px;
+          height: 40px;
+        }
+
+        .mobile-menu-btn:hover {
+          background: rgba(255,255,255,.2);
+        }
+
+        /* Close button for mobile sidebar */
+        .mobile-close-btn {
+          display: none;
+          position: absolute;
+          top: 20px;
+          right: 20px;
+          background: rgba(35,94,132,.1);
+          border: 1px solid var(--sidebar-border);
+          padding: 8px;
+          border-radius: 8px;
+          cursor: pointer;
+          color: var(--sidebar-foreground);
+          transition: all .2s ease;
+          align-items: center;
+          justify-content: center;
+          width: 32px;
+          height: 32px;
+          z-index: 10;
+        }
+
+        .mobile-close-btn:hover {
+          background: rgba(35,94,132,.2);
+        }
+
+        /* Backdrop for mobile sidebar */
+        .sidebar-backdrop {
+          display: none;
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,.5);
+          z-index: 999;
+        }
+
+        @media (max-width: 1024px) {
           .mike-chat-widget {
-            height: 600px;
-            border-radius: 0;
             min-width: auto;
+            height: 700px;
           }
 
           .app-container {
@@ -1420,42 +1473,228 @@ export default function MikeAIChat() {
           }
 
           .sidebar {
-            width: 300px;
-            position: absolute;
-            left: -300px;
+            width: 280px;
+            min-width: 280px;
+          }
+
+          .chat-header {
+            padding: 16px 30px;
+            min-height: 70px;
+          }
+
+          .chat-messages {
+            padding: 30px 50px;
+          }
+
+          .input-container {
+            padding: 20px 50px;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .mike-chat-widget {
+            height: 100vh;
+            border-radius: 0;
+            border: none;
+          }
+
+          .app-container {
+            min-width: auto;
+          }
+
+          .sidebar {
+            width: 280px;
+            min-width: 280px;
+            position: fixed;
+            left: -280px;
             top: 0;
             height: 100%;
             z-index: 1000;
             transition: left .3s cubic-bezier(.4,0,.2,1);
-            box-shadow: 2px 0 20px rgba(0,0,0,.15);
+            box-shadow: 2px 0 20px rgba(0,0,0,.2);
           }
 
           .sidebar.open {
             left: 0;
           }
 
+          .sidebar.open ~ .sidebar-backdrop {
+            display: block;
+          }
+
+          .mobile-close-btn {
+            display: flex;
+          }
+
+          .mobile-menu-btn {
+            display: flex;
+          }
+
+          .toggle-sidebar-btn {
+            display: none;
+          }
+
           .chat-header {
-            padding: 16px 20px;
-            min-height: 64px;
+            padding: 12px 16px;
+            min-height: 60px;
+          }
+
+          .chat-title {
+            font-size: 16px;
+          }
+
+          .home-button {
+            padding: 6px 12px;
+            font-size: 13px;
           }
 
           .chat-messages {
-            padding: 20px;
+            padding: 16px;
           }
 
           .input-container {
-            padding: 16px 20px;
+            padding: 12px 16px;
           }
 
           .message {
             max-width: 95%;
+            gap: 12px;
+          }
+
+          .message-avatar {
+            width: 32px;
+            height: 32px;
+            font-size: 12px;
+          }
+
+          .message-content {
+            padding: 12px 16px;
+          }
+
+          .message-text {
+            font-size: 14px;
+          }
+
+          .sidebar-header {
+            padding: 16px;
+          }
+
+          .brand-title {
+            font-size: 18px;
+          }
+
+          .profile-avatar {
+            width: 36px;
+            height: 36px;
+          }
+
+          .new-chat-button {
+            padding: 12px 16px;
+            font-size: 13px;
+          }
+
+          .chat-list-wrapper {
+            padding: 12px 16px;
+          }
+
+          .agents-section {
+            padding: 12px 16px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .chat-header {
+            padding: 10px 12px;
+            min-height: 56px;
+          }
+
+          .chat-title {
+            font-size: 14px;
+          }
+
+          .home-button span {
+            display: none;
+          }
+
+          .home-button {
+            padding: 6px;
+          }
+
+          .chat-messages {
+            padding: 12px;
+          }
+
+          .input-container {
+            padding: 10px 12px;
+          }
+
+          .message {
+            gap: 10px;
+          }
+
+          .message-avatar {
+            width: 28px;
+            height: 28px;
+          }
+
+          .message-content {
+            padding: 10px 12px;
+          }
+
+          .message-text {
+            font-size: 13px;
+          }
+
+          .input-wrapper {
+            padding: 8px 12px;
+          }
+
+          .attach-button, .send-button {
+            width: 36px;
+            height: 36px;
+          }
+        }
+
+        @media (max-width: 360px) {
+          .sidebar {
+            width: 260px;
+            min-width: 260px;
+            left: -260px;
+          }
+
+          .brand-title {
+            font-size: 16px;
+          }
+
+          .profile-avatar {
+            width: 32px;
+            height: 32px;
+          }
+
+          .message-text {
+            font-size: 12px;
           }
         }
       `}</style>
 
       <div className="mike-chat-widget">
         <div className="app-container">
-          <div className={`sidebar ${!sidebarVisible ? "hidden" : ""}`}>
+          <div className={`sidebar ${sidebarVisible ? "open" : ""}`}>
+            <button
+              className="mobile-close-btn"
+              onClick={() => {
+                setSidebarVisible(false)
+                if (typeof window !== "undefined") {
+                  localStorage.setItem("mike-ai-sidebar-visible", "false")
+                }
+              }}
+              title="Chiudi menu"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+              </svg>
+            </button>
+
             <div className="sidebar-header">
               <div className="brand-header">
                 <div className="brand-section">
@@ -1594,9 +1833,36 @@ export default function MikeAIChat() {
             </div>
           </div>
 
+          {sidebarVisible && (
+            <div
+              className="sidebar-backdrop"
+              onClick={() => {
+                setSidebarVisible(false)
+                if (typeof window !== "undefined") {
+                  localStorage.setItem("mike-ai-sidebar-visible", "false")
+                }
+              }}
+            />
+          )}
+
           <div className="chat-container">
             <div className="chat-header">
               <div className="header-left">
+                <button
+                  className="mobile-menu-btn"
+                  onClick={() => {
+                    setSidebarVisible(true)
+                    if (typeof window !== "undefined") {
+                      localStorage.setItem("mike-ai-sidebar-visible", "true")
+                    }
+                  }}
+                  title="Mostra menu"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+                  </svg>
+                </button>
+
                 <button
                   className="toggle-sidebar-btn"
                   onClick={() => {

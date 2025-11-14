@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { UserButton } from "@clerk/nextjs"
-import { Home } from "lucide-react"
+import { Home } from 'lucide-react'
 
 export default function TonyAIPage() {
   const [messages, setMessages] = useState<Array<{ text: string; sender: "ai" | "user"; time: string }>>([])
@@ -357,9 +357,58 @@ export default function TonyAIPage() {
         .tony-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
         .tony-scrollbar::-webkit-scrollbar-thumb { background: #235E84; border-radius: 4px; }
         .tony-scrollbar::-webkit-scrollbar-thumb:hover { background: #1a4763; }
+
+        /* Adding responsive styles and mobile menu */
+        @media (max-width: 1024px) {
+          .tony-main-container { min-width: unset !important; }
+          .tony-chat-messages { padding: 40px 60px !important; }
+          .tony-input-container { padding: 24px 60px !important; }
+        }
+
+        @media (max-width: 768px) {
+          .tony-sidebar {
+            position: fixed !important;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            z-index: 1000;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+            transform: translateX(-100%);
+          }
+          .tony-sidebar.visible {
+            transform: translateX(0);
+          }
+          .tony-chat-messages { padding: 24px 20px !important; }
+          .tony-input-container { padding: 20px !important; }
+          .tony-header { padding: 16px 20px !important; min-height: 70px !important; }
+          .tony-message { max-width: 100% !important; }
+          .tony-toggle-desktop { display: none !important; }
+          .tony-toggle-mobile { display: flex !important; }
+          .tony-close-btn { display: flex !important; }
+        }
+
+        @media (max-width: 480px) {
+          .tony-header-title { font-size: 16px !important; }
+          .tony-chat-messages { padding: 16px !important; }
+          .tony-input-container { padding: 16px !important; }
+          .tony-avatar { width: 32px !important; height: 32px !important; }
+          .tony-message-bubble { padding: 16px !important; font-size: 14px !important; }
+          .tony-sidebar { width: 280px !important; min-width: 280px !important; }
+        }
+
+        @media (max-width: 360px) {
+          .tony-header-title { font-size: 14px !important; }
+          .tony-sidebar { width: 260px !important; min-width: 260px !important; }
+        }
+
+        @keyframes typing {
+          0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+          40% { transform: scale(1); opacity: 1; }
+        }
       `}</style>
 
       <div
+        className="tony-main-container"
         style={{
           width: "100%",
           height: "100vh",
@@ -371,6 +420,7 @@ export default function TonyAIPage() {
       >
         {/* Sidebar */}
         <div
+          className={`tony-sidebar ${sidebarVisible ? 'visible' : ''}`}
           style={{
             width: sidebarVisible ? "320px" : "0",
             minWidth: sidebarVisible ? "320px" : "0",
@@ -383,7 +433,40 @@ export default function TonyAIPage() {
           }}
         >
           {/* Sidebar Header */}
-          <div style={{ padding: "20px", borderBottom: "1px solid #e2e8f0" }}>
+          <div style={{ padding: "20px", borderBottom: "1px solid #e2e8f0", position: "relative" }}>
+            <button
+              className="tony-close-btn"
+              onClick={() => {
+                setSidebarVisible(false)
+                localStorage.setItem("tony-ai-sidebar-visible", "false")
+              }}
+              style={{
+                display: "none",
+                position: "absolute",
+                top: "20px",
+                right: "20px",
+                background: "transparent",
+                border: "none",
+                color: "#64748b",
+                cursor: "pointer",
+                padding: "4px",
+                borderRadius: "4px",
+                transition: "all 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "#f1f5f9"
+                e.currentTarget.style.color = "#235E84"
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent"
+                e.currentTarget.style.color = "#64748b"
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+
             <div
               style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" }}
             >
@@ -666,6 +749,7 @@ export default function TonyAIPage() {
         <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, background: "#ffffff" }}>
           {/* Chat Header */}
           <div
+            className="tony-header"
             style={{
               background: "#235E84",
               color: "#ffffff",
@@ -679,6 +763,33 @@ export default function TonyAIPage() {
           >
             <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
               <button
+                className="tony-toggle-mobile"
+                onClick={() => {
+                  setSidebarVisible(true)
+                  localStorage.setItem("tony-ai-sidebar-visible", "true")
+                }}
+                style={{
+                  display: "none",
+                  background: "rgba(255,255,255,0.1)",
+                  border: "1px solid rgba(255,255,255,0.2)",
+                  padding: "10px",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  color: "#ffffff",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.2)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.1)")}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M3 12h18M3 6h18M3 18h18" />
+                </svg>
+              </button>
+
+              <button
+                className="tony-toggle-desktop"
                 onClick={() => {
                   setSidebarVisible(!sidebarVisible)
                   localStorage.setItem("tony-ai-sidebar-visible", String(!sidebarVisible))
@@ -706,7 +817,7 @@ export default function TonyAIPage() {
                   )}
                 </svg>
               </button>
-              <div style={{ fontFamily: "Montserrat, sans-serif", fontSize: "20px", fontWeight: 600 }}>
+              <div className="tony-header-title" style={{ fontFamily: "Montserrat, sans-serif", fontSize: "20px", fontWeight: 600 }}>
                 Tony AI - Direttore Commerciale
               </div>
             </div>
@@ -758,12 +869,13 @@ export default function TonyAIPage() {
           {/* Chat Messages */}
           <div
             ref={chatMessagesRef}
-            className="tony-scrollbar"
+            className="tony-scrollbar tony-chat-messages"
             style={{ flex: 1, overflowY: "auto", padding: "50px 80px", background: "#ffffff", minHeight: 0 }}
           >
             {messages.map((msg, idx) => (
               <div
                 key={idx}
+                className="tony-message"
                 style={{
                   marginBottom: "32px",
                   display: "flex",
@@ -775,6 +887,7 @@ export default function TonyAIPage() {
                 }}
               >
                 <div
+                  className="tony-avatar"
                   style={{
                     width: "40px",
                     height: "40px",
@@ -802,6 +915,7 @@ export default function TonyAIPage() {
                 </div>
 
                 <div
+                  className="tony-message-bubble"
                   style={{
                     flex: 1,
                     background: msg.sender === "user" ? "#235E84" : "#ffffff",
@@ -850,7 +964,7 @@ export default function TonyAIPage() {
           </div>
 
           {/* Input Container */}
-          <div style={{ padding: "30px 80px", borderTop: "1px solid #e2e8f0", background: "#ffffff" }}>
+          <div className="tony-input-container" style={{ padding: "30px 80px", borderTop: "1px solid #e2e8f0", background: "#ffffff" }}>
             <div
               style={{
                 display: "flex",

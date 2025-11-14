@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import { UserButton } from "@clerk/nextjs"
 import Link from "next/link"
-import { Home } from "lucide-react"
+import { Home, Menu, X } from 'lucide-react'
 
 interface Message {
   text: string
@@ -167,7 +167,7 @@ export default function ValentinaAI() {
       '<code style="background: rgba(0,0,0,0.05); padding: 2px 6px; border-radius: 4px; font-family: monospace;">$1</code>',
     )
     formatted = formatted.replace(
-      /\[([^\]]+?)\]$$(https?:\/\/[^\s)]+)$$/g,
+      /\[([^\]]+?)\]\$\$(https?:\/\/[^\s)]+?)\$\$/g,
       '<a href="$2" target="_blank" rel="noopener noreferrer" style="color: #235E84; text-decoration: underline;">$1</a>',
     )
     formatted = formatted.replace(/\n/g, "<br>")
@@ -374,6 +374,19 @@ export default function ValentinaAI() {
         .valentina-scrollbar::-webkit-scrollbar-thumb:hover {
           background: #1a4a66;
         }
+
+        /* Added responsive styles for mobile screens */
+        @media (max-width: 1024px) {
+          body {
+            font-size: 15px;
+          }
+        }
+
+        @media (max-width: 768px) {
+          body {
+            font-size: 14px;
+          }
+        }
       `}</style>
 
       <div
@@ -383,8 +396,29 @@ export default function ValentinaAI() {
           display: "flex",
           background: "#ffffff",
           fontFamily: "'Open Sans', sans-serif",
+          position: "relative",
         }}
       >
+        {sidebarVisible && (
+          <div
+            onClick={() => {
+              setSidebarVisible(false)
+              localStorage.setItem("valentina-ai-sidebar-visible", "false")
+            }}
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: "rgba(0,0,0,0.5)",
+              zIndex: 999,
+              display: "none",
+            }}
+            className="mobile-backdrop"
+          />
+        )}
+
         {/* Sidebar */}
         <div
           style={{
@@ -396,7 +430,9 @@ export default function ValentinaAI() {
             flexDirection: "column",
             transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
             overflow: "hidden",
+            zIndex: 1000,
           }}
+          className="valentina-sidebar"
         >
           <div style={{ padding: "20px", borderBottom: "1px solid #e2e8f0" }}>
             <div
@@ -425,10 +461,33 @@ export default function ValentinaAI() {
                     fontWeight: 600,
                     color: "#475569",
                   }}
+                  className="brand-text"
                 >
                   Valentina AI
                 </div>
               </div>
+              <button
+                onClick={() => {
+                  setSidebarVisible(false)
+                  localStorage.setItem("valentina-ai-sidebar-visible", "false")
+                }}
+                style={{
+                  background: "rgba(35, 94, 132, 0.1)",
+                  border: "none",
+                  color: "#235E84",
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  display: "none",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "all 0.2s ease",
+                }}
+                className="mobile-close-btn"
+              >
+                <X size={18} />
+              </button>
             </div>
             <button
               onClick={createNewChat}
@@ -448,6 +507,7 @@ export default function ValentinaAI() {
                 width: "100%",
                 transition: "all 0.2s ease",
               }}
+              className="new-chat-btn"
             >
               <span>+</span> Nuova Chat
             </button>
@@ -461,6 +521,7 @@ export default function ValentinaAI() {
                 fontWeight: 500,
                 color: "#475569",
               }}
+              className="memory-toggle-container"
             >
               <label htmlFor="memoryToggle">Usa Memoria</label>
               <label style={{ position: "relative", display: "inline-block", width: "44px", height: "24px" }}>
@@ -873,6 +934,7 @@ export default function ValentinaAI() {
               justifyContent: "space-between",
               minHeight: "80px",
             }}
+            className="chat-header"
           >
             <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
               <button
@@ -891,21 +953,30 @@ export default function ValentinaAI() {
                   alignItems: "center",
                   justifyContent: "center",
                 }}
+                className="sidebar-toggle"
                 title="Mostra/Nascondi conversazioni"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                  {sidebarVisible ? (
-                    <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
-                  ) : (
-                    <path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z" />
-                  )}
-                </svg>
+                <span className="desktop-toggle">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    {sidebarVisible ? (
+                      <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+                    ) : (
+                      <path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z" />
+                    )}
+                  </svg>
+                </span>
+                <span className="mobile-toggle" style={{ display: "none" }}>
+                  <Menu size={20} />
+                </span>
               </button>
-              <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: "20px", fontWeight: 600 }}>
+              <div
+                style={{ fontFamily: "'Montserrat', sans-serif", fontSize: "20px", fontWeight: 600 }}
+                className="header-title"
+              >
                 Valentina AI - SEO Optimizer
               </div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "16px" }} className="header-actions">
               <Link
                 href="/"
                 style={{
@@ -920,6 +991,7 @@ export default function ValentinaAI() {
                   transition: "all 0.2s ease",
                   color: "#ffffff",
                 }}
+                className="home-btn"
               >
                 <Home size={20} />
               </Link>
@@ -931,7 +1003,7 @@ export default function ValentinaAI() {
 
           {/* Messages */}
           <div
-            className="valentina-scrollbar"
+            className="valentina-scrollbar messages-container"
             style={{ flex: 1, overflowY: "auto", padding: "50px 80px", background: "#ffffff", minHeight: 0 }}
           >
             {messages.map((message, index) => (
@@ -1048,7 +1120,10 @@ export default function ValentinaAI() {
           </div>
 
           {/* Input */}
-          <div style={{ padding: "30px 80px", borderTop: "1px solid #e2e8f0", background: "#ffffff" }}>
+          <div
+            style={{ padding: "30px 80px", borderTop: "1px solid #e2e8f0", background: "#ffffff" }}
+            className="input-container"
+          >
             <div
               style={{
                 display: "flex",
@@ -1119,6 +1194,137 @@ export default function ValentinaAI() {
           30% {
             transform: translateY(-10px);
             opacity: 1;
+          }
+        }
+
+        /* Added comprehensive responsive styles */
+        @media (max-width: 1024px) {
+          .messages-container {
+            padding: 40px 50px !important;
+          }
+          .input-container {
+            padding: 25px 50px !important;
+          }
+          .chat-header {
+            padding: 18px 30px !important;
+            min-height: 70px !important;
+          }
+          .header-title {
+            font-size: 18px !important;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .valentina-sidebar {
+            position: fixed !important;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 1000;
+            transform: translateX(${sidebarVisible ? '0' : '-100%'});
+            width: 280px !important;
+            min-width: 280px !important;
+          }
+
+          .mobile-backdrop {
+            display: ${sidebarVisible ? 'block' : 'none'} !important;
+          }
+
+          .mobile-close-btn {
+            display: flex !important;
+          }
+
+          .desktop-toggle {
+            display: none !important;
+          }
+
+          .mobile-toggle {
+            display: block !important;
+          }
+
+          .messages-container {
+            padding: 20px 16px !important;
+          }
+
+          .input-container {
+            padding: 16px !important;
+          }
+
+          .chat-header {
+            padding: 12px 16px !important;
+            min-height: 60px !important;
+          }
+
+          .header-title {
+            font-size: 16px !important;
+            display: none !important;
+          }
+
+          .header-actions {
+            gap: 12px !important;
+          }
+
+          .home-btn,
+          .header-actions > div {
+            width: 36px !important;
+            height: 36px !important;
+          }
+
+          .brand-text {
+            font-size: 18px !important;
+          }
+
+          .new-chat-btn {
+            padding: 12px 16px !important;
+            font-size: 13px !important;
+          }
+
+          .memory-toggle-container {
+            font-size: 13px !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .valentina-sidebar {
+            width: 260px !important;
+            min-width: 260px !important;
+          }
+
+          .messages-container {
+            padding: 16px 12px !important;
+          }
+
+          .input-container {
+            padding: 12px !important;
+          }
+
+          .chat-header {
+            padding: 10px 12px !important;
+            min-height: 56px !important;
+          }
+
+          .brand-text {
+            font-size: 16px !important;
+          }
+
+          .new-chat-btn {
+            padding: 10px 14px !important;
+            font-size: 12px !important;
+          }
+        }
+
+        @media (max-width: 360px) {
+          .valentina-sidebar {
+            width: 240px !important;
+            min-width: 240px !important;
+          }
+
+          .messages-container {
+            padding: 12px 8px !important;
+          }
+
+          .input-container {
+            padding: 10px !important;
           }
         }
       `}</style>

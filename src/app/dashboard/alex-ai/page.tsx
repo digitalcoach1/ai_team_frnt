@@ -478,17 +478,110 @@ export default function AlexAIPage() {
         .alex-ai-container * { margin: 0; padding: 0; box-sizing: border-box; }
         .alex-ai-container { width: 100%; height: 100vh; font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; position: relative; overflow: hidden; background: #ffffff; }
         .alex-ai-app { background: #ffffff; width: 100%; height: 100%; display: flex; overflow: hidden; position: relative; }
-        .alex-ai-sidebar { width: 320px; min-width: 320px; background: #ffffff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; transition: all 0.3s; position: relative; }
+        
+        /* Added responsive sidebar with mobile menu */
+        .alex-ai-sidebar { 
+          width: 320px; 
+          min-width: 320px; 
+          background: #ffffff; 
+          border-right: 1px solid #e2e8f0; 
+          display: flex; 
+          flex-direction: column; 
+          transition: all 0.3s; 
+          position: relative; 
+        }
+        
+        @media (max-width: 1024px) {
+          .alex-ai-sidebar { width: 280px; min-width: 280px; }
+        }
+        
+        @media (max-width: 768px) {
+          .alex-ai-sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: 85%;
+            max-width: 320px;
+            z-index: 1000;
+            transform: translateX(-100%);
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+          }
+          .alex-ai-sidebar:not(.hidden) {
+            transform: translateX(0);
+          }
+        }
+        
         .alex-ai-sidebar.hidden { width: 0; min-width: 0; overflow: hidden; border-right: none; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-sidebar.hidden {
+            transform: translateX(-100%);
+          }
+        }
+        
         .alex-ai-sidebar-header { padding: 20px; border-bottom: 1px solid #e2e8f0; background: #ffffff; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-sidebar-header { padding: 16px; }
+        }
+        
         .alex-ai-brand-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-brand-header { margin-bottom: 16px; }
+        }
+        
         .alex-ai-brand-section { display: flex; align-items: center; gap: 12px; }
         .alex-ai-brand-title { font-family: 'Montserrat', sans-serif; font-size: 20px; font-weight: 600; color: #475569; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-brand-title { font-size: 18px; }
+        }
+        
+        /* Added mobile close button */
+        .alex-ai-close-sidebar-btn {
+          display: none;
+          background: rgba(35, 94, 132, 0.1);
+          border: 1px solid rgba(35, 94, 132, 0.2);
+          color: #235E84;
+          width: 32px;
+          height: 32px;
+          border-radius: 6px;
+          cursor: pointer;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s;
+        }
+        
+        @media (max-width: 768px) {
+          .alex-ai-close-sidebar-btn { display: flex; }
+        }
+        
+        .alex-ai-close-sidebar-btn:hover {
+          background: rgba(35, 94, 132, 0.2);
+        }
+        
         .alex-ai-profile-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; background: #235E84; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-profile-avatar { width: 36px; height: 36px; }
+        }
+        
         .alex-ai-profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .alex-ai-new-chat-btn { background: #235E84; border: none; color: #ffffff; padding: 14px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; width: 100%; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-new-chat-btn { padding: 12px 16px; font-size: 13px; }
+        }
+        
         .alex-ai-new-chat-btn:hover { background: #1a4a68; transform: translateY(-1px); }
         .alex-ai-memory-toggle { display: flex; align-items: center; justify-content: space-between; padding: 16px 0 0 0; font-size: 14px; font-weight: 500; color: #475569; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-memory-toggle { font-size: 13px; padding: 12px 0 0 0; }
+        }
+        
         .alex-ai-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
         .alex-ai-switch input { opacity: 0; width: 0; height: 0; }
         .alex-ai-slider { position: absolute; cursor: pointer; inset: 0; background-color: #ccc; transition: 0.4s; border-radius: 24px; }
@@ -496,58 +589,236 @@ export default function AlexAIPage() {
         .alex-ai-switch input:checked + .alex-ai-slider { background-color: #235E84; }
         .alex-ai-switch input:checked + .alex-ai-slider:before { transform: translateX(20px); }
         .alex-ai-sidebar-split { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
-        .alex-ai-chat-list-wrapper { flex: 1 1 50%; overflow-y: auto; padding: 16px 20px; min-height: 100px; }
+        .alex-ai-chat-list-wrapper { flex: 1 1 auto; max-height: 40%; overflow-y: auto; padding: 16px 20px; min-height: 100px; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-chat-list-wrapper { padding: 12px 16px; }
+        }
+        
         .alex-ai-chat-item { padding: 16px; border-radius: 8px; cursor: pointer; transition: all 0.2s; margin-bottom: 2px; background: transparent; position: relative; display: flex; justify-content: space-between; align-items: center; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-chat-item { padding: 12px; }
+        }
+        
         .alex-ai-chat-item:hover { background: #E3F2FD; }
         .alex-ai-chat-item.active { background: #E3F2FD; color: #235E84; }
-        .alex-ai-chat-item-content { flex: 1; }
-        .alex-ai-chat-item-title { font-weight: 500; font-size: 14px; color: #475569; margin-bottom: 4px; }
+        .alex-ai-chat-item-content { flex: 1; min-width: 0; }
+        .alex-ai-chat-item-title { font-weight: 500; font-size: 14px; color: #475569; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-chat-item-title { font-size: 13px; }
+        }
+        
         .alex-ai-chat-item-subtitle { font-size: 12px; color: #64748b; }
-        .alex-ai-delete-btn { opacity: 0; background: #ef4444; border: none; color: white; width: 24px; height: 24px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; font-size: 12px; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-chat-item-subtitle { font-size: 11px; }
+        }
+        
+        .alex-ai-delete-btn { opacity: 0; background: #ef4444; border: none; color: white; width: 24px; height: 24px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; font-size: 12px; flex-shrink: 0; }
         .alex-ai-chat-item:hover .alex-ai-delete-btn { opacity: 1; }
         .alex-ai-delete-btn:hover { background: #dc2626; }
-        .alex-ai-agents-section { flex: 1 1 50%; min-height: 150px; margin-top: 0; padding: 16px 20px; padding-top: 16px; border-top: 1px solid #e2e8f0; display: flex; flex-direction: column; }
+        .alex-ai-agents-section { flex: 1 1 auto; min-height: 150px; margin-top: 0; padding: 16px 20px; padding-top: 16px; border-top: 1px solid #e2e8f0; display: flex; flex-direction: column; overflow: hidden; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-agents-section { padding: 12px 16px; padding-top: 12px; }
+        }
+        
         .alex-ai-agents-title { font-family: 'Montserrat', sans-serif; font-size: 16px; font-weight: 600; color: #475569; margin-bottom: 16px; padding: 0 4px; flex-shrink: 0; }
-        .alex-ai-agents-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-        .alex-ai-agent-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; text-decoration: none; color: #475569; transition: background-color 0.2s; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-agents-title { font-size: 14px; margin-bottom: 12px; }
+        }
+        
+        .alex-ai-agents-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+        
+        .alex-ai-agents-list::-webkit-scrollbar { width: 6px; }
+        .alex-ai-agents-list::-webkit-scrollbar-track { background: transparent; }
+        .alex-ai-agents-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .alex-ai-agents-list::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .alex-ai-agent-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; text-decoration: none; color: #475569; transition: background-color 0.2s; flex-shrink: 0; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-agent-item { padding: 8px 10px; gap: 10px; }
+        }
+        
         .alex-ai-agent-item:hover { background-color: #E3F2FD; }
         .alex-ai-agent-avatar { width: 32px; height: 32px; border-radius: 50%; background: #f8fafc; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; color: #64748b; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-agent-avatar { width: 28px; height: 28px; }
+        }
+        
         .alex-ai-agent-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .alex-ai-agent-name { font-size: 14px; font-weight: 500; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-agent-name { font-size: 13px; }
+        }
+        
         .alex-ai-chat-container { flex: 1; display: flex; flex-direction: column; min-width: 0; background: #ffffff; position: relative; }
         .alex-ai-chat-header { background: #235E84; color: #ffffff; padding: 20px 40px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; min-height: 80px; }
-        .alex-ai-header-left { display: flex; align-items: center; gap: 16px; }
-        .alex-ai-header-right { display: flex; gap: 12px; align-items: center; }
-        .alex-ai-toggle-btn { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); padding: 10px; border-radius: 8px; cursor: pointer; color: #ffffff; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+        
+        @media (max-width: 1024px) {
+          .alex-ai-chat-header { padding: 16px 24px; min-height: 70px; }
+        }
+        
+        @media (max-width: 768px) {
+          .alex-ai-chat-header { padding: 14px 16px; min-height: 64px; }
+        }
+        
+        .alex-ai-header-left { display: flex; align-items: center; gap: 16px; min-width: 0; flex: 1; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-header-left { gap: 12px; }
+        }
+        
+        .alex-ai-header-right { display: flex; gap: 12px; align-items: center; flex-shrink: 0; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-header-right { gap: 8px; }
+        }
+        
+        /* Made toggle button work as hamburger menu on mobile */
+        .alex-ai-toggle-btn { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); padding: 10px; border-radius: 8px; cursor: pointer; color: #ffffff; transition: all 0.2s; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-toggle-btn { padding: 8px; }
+          .alex-ai-toggle-btn svg { width: 22px; height: 22px; }
+        }
+        
         .alex-ai-toggle-btn:hover { background: rgba(255, 255, 255, 0.2); }
-        .alex-ai-chat-title { font-family: 'Montserrat', sans-serif; font-size: 20px; font-weight: 600; color: #ffffff; }
+        .alex-ai-chat-title { font-family: 'Montserrat', sans-serif; font-size: 20px; font-weight: 600; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        @media (max-width: 1024px) {
+          .alex-ai-chat-title { font-size: 18px; }
+        }
+        
+        @media (max-width: 768px) {
+          .alex-ai-chat-title { font-size: 16px; }
+        }
+        
+        @media (max-width: 480px) {
+          .alex-ai-chat-title { font-size: 14px; }
+        }
+        
         .alex-ai-home-btn { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); padding: 10px 14px; border-radius: 8px; cursor: pointer; color: #ffffff; transition: all 0.2s; display: flex; align-items: center; gap: 8px; text-decoration: none; font-size: 14px; font-weight: 500; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-home-btn { padding: 8px 10px; font-size: 0; gap: 0; }
+          .alex-ai-home-btn svg { width: 18px; height: 18px; }
+        }
+        
         .alex-ai-home-btn:hover { background: rgba(255, 255, 255, 0.2); }
+        
         .alex-ai-messages { flex: 1; overflow-y: auto; padding: 50px 80px; background: #ffffff; min-height: 0; }
+        
+        @media (max-width: 1024px) {
+          .alex-ai-messages { padding: 40px 50px; }
+        }
+        
+        @media (max-width: 768px) {
+          .alex-ai-messages { padding: 30px 20px; }
+        }
+        
+        @media (max-width: 480px) {
+          .alex-ai-messages { padding: 20px 16px; }
+        }
+        
         .alex-ai-message { margin-bottom: 32px; display: flex; align-items: flex-start; gap: 20px; max-width: 90%; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-message { margin-bottom: 24px; gap: 12px; max-width: 95%; }
+        }
+        
         .alex-ai-message.user { flex-direction: row-reverse; margin-left: auto; }
         .alex-ai-message-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; flex-shrink: 0; overflow: hidden; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-message-avatar { width: 32px; height: 32px; font-size: 12px; }
+        }
+        
         .alex-ai-message-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .alex-ai-message.ai .alex-ai-message-avatar { background: linear-gradient(135deg, #235E84 0%, #1a4a68 100%); color: #ffffff; }
         .alex-ai-message.user .alex-ai-message-avatar { background: #E3F2FD; color: #235E84; }
         .alex-ai-message-content { flex: 1; background: #ffffff; padding: 20px 24px; border-radius: 12px; border: 1px solid #e2e8f0; min-width: 200px; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-message-content { padding: 14px 16px; min-width: 150px; }
+        }
+        
         .alex-ai-message.user .alex-ai-message-content { background: #235E84; color: #ffffff; border-color: #235E84; }
-        .alex-ai-message-text { color: #334155; line-height: 1.6; font-size: 15px; }
+        .alex-ai-message-text { color: #334155; line-height: 1.6; font-size: 15px; word-wrap: break-word; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-message-text { font-size: 14px; }
+        }
+        
         .alex-ai-message.user .alex-ai-message-text { color: #ffffff; }
         .alex-ai-message-time { font-size: 12px; color: #64748b; margin-top: 8px; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-message-time { font-size: 11px; margin-top: 6px; }
+        }
+        
         .alex-ai-message.user .alex-ai-message-time { color: rgba(255, 255, 255, 0.7); }
         .alex-ai-attachment-list { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
         .alex-ai-attachment-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; font-size: 12px; background: #f8fafc; color: #334155; border: 1px solid #e2e8f0; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-attachment-pill { padding: 5px 8px; font-size: 11px; }
+        }
+        
         .alex-ai-message.user .alex-ai-attachment-pill { background: rgba(255, 255, 255, 0.15); color: #fff; border-color: rgba(255, 255, 255, 0.25); }
         .alex-ai-input-container { padding: 30px 80px; border-top: 1px solid #e2e8f0; background: #ffffff; }
+        
+        @media (max-width: 1024px) {
+          .alex-ai-input-container { padding: 24px 50px; }
+        }
+        
+        @media (max-width: 768px) {
+          .alex-ai-input-container { padding: 16px 20px; }
+        }
+        
+        @media (max-width: 480px) {
+          .alex-ai-input-container { padding: 12px 16px; }
+        }
+        
         .alex-ai-input-wrapper { display: flex; align-items: flex-end; gap: 12px; background: #ffffff; border: 2px solid #e2e8f0; border-radius: 12px; padding: 12px 16px; transition: all 0.2s; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-input-wrapper { padding: 10px 12px; gap: 10px; }
+        }
+        
         .alex-ai-input-wrapper:focus-within { border-color: #235E84; box-shadow: 0 0 0 3px rgba(35, 94, 132, 0.1); }
         .alex-ai-input { flex: 1; border: none; outline: none; background: transparent; font-size: 15px; color: #475569; resize: none; min-height: 24px; max-height: 120px; font-family: inherit; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-input { font-size: 14px; }
+        }
+        
         .alex-ai-input::placeholder { color: #64748b; }
         .alex-ai-attach-btn { position: relative; background: transparent; border: 2px solid #e2e8f0; color: #475569; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: all 0.2s; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-attach-btn { width: 36px; height: 36px; }
+        }
+        
         .alex-ai-attach-btn:hover { background: #E3F2FD; border-color: #235E84; color: #235E84; transform: scale(1.05); }
         .alex-ai-attach-badge { position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: #ef4444; color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-attach-badge { min-width: 16px; height: 16px; font-size: 10px; }
+        }
+        
         .alex-ai-send-btn { background: #235E84; border: none; color: #ffffff; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-send-btn { width: 36px; height: 36px; }
+        }
+        
         .alex-ai-send-btn:hover:not(:disabled) { background: #1a4a68; transform: scale(1.05); }
         .alex-ai-send-btn:disabled { background: #cbd5e1; color: #64748b; cursor: not-allowed; }
         .alex-ai-thinking { display: flex; align-items: center; gap: 5px; }
@@ -555,17 +826,66 @@ export default function AlexAIPage() {
         .alex-ai-thinking .dot:nth-child(2) { animation-delay: 0.2s; }
         .alex-ai-thinking .dot:nth-child(3) { animation-delay: 0.4s; }
         @keyframes thinking { 0%, 60%, 100% { transform: translateY(0); opacity: 0.4; } 30% { transform: translateY(-10px); opacity: 1; } }
-        .alex-ai-modal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        
+        .alex-ai-modal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 20px; }
         .alex-ai-modal-card { width: min(980px, 95vw); background: #0f172a; color: #e5e7eb; border-radius: 14px; border: 2px solid #235E84; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45); overflow: hidden; }
-        .alex-ai-modal-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: #235E84; color: #fff; font-weight: 700; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-modal-card { width: 100%; max-width: 500px; }
+        }
+        
+        .alex-ai-modal-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: #235E84; color: #fff; font-weight: 700; font-size: 15px; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-modal-head { padding: 12px 14px; font-size: 14px; }
+        }
+        
         .alex-ai-modal-body { padding: 16px; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-modal-body { padding: 14px; }
+        }
+        
         .alex-ai-modal-drop { border: 2px dashed #334155; border-radius: 14px; padding: 18px; text-align: center; background: #111827; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-modal-drop { padding: 14px; font-size: 14px; }
+        }
+        
         .alex-ai-modal-files { margin-top: 10px; }
         .alex-ai-modal-filepill { display: inline-block; margin: 4px 6px 0 0; padding: 4px 8px; border-radius: 999px; border: 1px solid #334155; background: #0b1220; font-size: 12px; }
-        .alex-ai-modal-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
-        .alex-ai-modal-btn { background: #235E84; color: #fff; border: 0; padding: 10px 14px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-modal-filepill { font-size: 11px; padding: 3px 7px; }
+        }
+        
+        .alex-ai-modal-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+        .alex-ai-modal-btn { background: #235E84; color: #fff; border: 0; padding: 10px 14px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-modal-btn { padding: 9px 12px; font-size: 13px; }
+        }
+        
         .alex-ai-modal-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .alex-ai-modal-close { background: rgba(255, 255, 255, 0.15); color: #fff; border: 1px solid rgba(255, 255, 255, 0.25); padding: 8px 10px; border-radius: 8px; cursor: pointer; }
+        .alex-ai-modal-close { background: rgba(255, 255, 255, 0.15); color: #fff; border: 1px solid rgba(255, 255, 255, 0.25); padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+        
+        @media (max-width: 768px) {
+          .alex-ai-modal-close { padding: 7px 9px; font-size: 13px; }
+        }
+        
+        /* Added mobile overlay for sidebar */
+        @media (max-width: 768px) {
+          .alex-ai-sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+          }
+          .alex-ai-sidebar:not(.hidden) ~ .alex-ai-sidebar-overlay {
+            display: block;
+          }
+        }
       `}</style>
 
       <div className="alex-ai-container">
@@ -582,6 +902,11 @@ export default function AlexAIPage() {
                   </div>
                   <div className="alex-ai-brand-title">Alex AI</div>
                 </div>
+                <button className="alex-ai-close-sidebar-btn" onClick={() => setSidebarVisible(false)}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                  </svg>
+                </button>
               </div>
               <button className="alex-ai-new-chat-btn" onClick={createNewChat}>
                 <span>+</span> Nuova Chat
@@ -882,6 +1207,12 @@ export default function AlexAIPage() {
             </div>
           </div>
         </div>
+        {/* Added overlay for mobile sidebar */}
+        <div
+          className="alex-ai-sidebar-overlay"
+          onClick={() => setSidebarVisible(false)}
+          style={{ display: sidebarVisible ? "block" : "none" }}
+        ></div>
       </div>
 
       {showUploadModal && (
@@ -930,3 +1261,9 @@ export default function AlexAIPage() {
     </>
   )
 }
+
+
+
+
+
+

@@ -162,7 +162,7 @@ export default function JimAIPage() {
       '<code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: monospace;">$1</code>',
     )
     t = t.replace(
-      /\[([^\]]+?)\]$$(https?:\/\/[^\s)]+)$$/g,
+      /\[([^\]]+?)\]\$\$(https?:\/\/[^\s)]+)\$\$/g,
       '<a href="$2" target="_blank" rel="noopener noreferrer" style="color: #235E84; text-decoration: underline;">$1</a>',
     )
     t = t.replace(/\n/g, "<br>")
@@ -373,6 +373,13 @@ export default function JimAIPage() {
           padding: 0;
           font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
+
+        /* Added responsive breakpoints for mobile and tablet */
+        @media (max-width: 768px) {
+          body {
+            font-size: 14px;
+          }
+        }
       `}</style>
 
       <div
@@ -396,7 +403,10 @@ export default function JimAIPage() {
             flexDirection: "column",
             transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
             overflow: "hidden",
+            position: "relative",
+            zIndex: 40,
           }}
+          className="sidebar-responsive"
         >
           {/* Sidebar Header */}
           <div style={{ padding: "20px", borderBottom: "1px solid #e2e8f0" }}>
@@ -428,6 +438,26 @@ export default function JimAIPage() {
                   Jim AI
                 </div>
               </div>
+              <button
+                onClick={() => setSidebarVisible(false)}
+                className="mobile-close-btn"
+                style={{
+                  display: "none",
+                  background: "rgba(35, 94, 132, 0.1)",
+                  border: "none",
+                  color: "#235E84",
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "50%",
+                  cursor: "pointer",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "18px",
+                  fontWeight: 600,
+                }}
+              >
+                ×
+              </button>
             </div>
 
             <button
@@ -939,10 +969,35 @@ export default function JimAIPage() {
               justifyContent: "space-between",
               minHeight: "80px",
             }}
+            className="chat-header-responsive"
           >
             <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
               <button
                 onClick={() => setSidebarVisible(!sidebarVisible)}
+                className="hamburger-menu"
+                style={{
+                  display: "none",
+                  background: "rgba(255,255,255,0.1)",
+                  border: "1px solid rgba(255,255,255,0.2)",
+                  padding: "10px",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  color: "#ffffff",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "40px",
+                  height: "40px",
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="3" y1="12" x2="21" y2="12"></line>
+                  <line x1="3" y1="6" x2="21" y2="6"></line>
+                  <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+              </button>
+              <button
+                onClick={() => setSidebarVisible(!sidebarVisible)}
+                className="desktop-toggle"
                 style={{
                   background: "rgba(255,255,255,0.1)",
                   border: "1px solid rgba(255,255,255,0.2)",
@@ -963,7 +1018,10 @@ export default function JimAIPage() {
                   )}
                 </svg>
               </button>
-              <div style={{ fontFamily: "Montserrat, sans-serif", fontSize: "20px", fontWeight: 600 }}>
+              <div
+                style={{ fontFamily: "Montserrat, sans-serif", fontSize: "20px", fontWeight: 600 }}
+                className="header-title-responsive"
+              >
                 Jim AI - Coach di Vendite
               </div>
             </div>
@@ -1198,6 +1256,90 @@ export default function JimAIPage() {
           30% {
             transform: translateY(-10px);
             opacity: 1;
+          }
+        }
+
+        /* Mobile devices (phones) */
+        @media (max-width: 768px) {
+          .sidebar-responsive {
+            position: fixed !important;
+            left: ${sidebarVisible ? "0" : "-320px"} !important;
+            top: 0 !important;
+            bottom: 0 !important;
+            width: 320px !important;
+            min-width: 320px !important;
+            box-shadow: ${sidebarVisible ? "2px 0 8px rgba(0,0,0,0.1)" : "none"} !important;
+            z-index: 50 !important;
+          }
+
+          .mobile-close-btn {
+            display: flex !important;
+          }
+
+          .hamburger-menu {
+            display: flex !important;
+          }
+
+          .desktop-toggle {
+            display: none !important;
+          }
+
+          .chat-header-responsive {
+            padding: 16px 20px !important;
+            min-height: 64px !important;
+          }
+
+          .header-title-responsive {
+            font-size: 16px !important;
+          }
+
+          div[style*="padding: 50px 80px"] {
+            padding: 20px 16px !important;
+          }
+
+          div[style*="padding: 30px 80px"] {
+            padding: 16px !important;
+          }
+
+          div[style*="maxWidth: '90%'"] {
+            max-width: 100% !important;
+          }
+        }
+
+        /* Small mobile devices */
+        @media (max-width: 480px) {
+          .sidebar-responsive {
+            width: 280px !important;
+            min-width: 280px !important;
+            left: ${sidebarVisible ? "0" : "-280px"} !important;
+          }
+
+          .header-title-responsive {
+            font-size: 14px !important;
+          }
+
+          div[style*="padding: 20px"] {
+            padding: 16px !important;
+          }
+        }
+
+        /* Extra small devices */
+        @media (max-width: 360px) {
+          .sidebar-responsive {
+            width: 260px !important;
+            min-width: 260px !important;
+            left: ${sidebarVisible ? "0" : "-260px"} !important;
+          }
+        }
+
+        /* Tablet landscape */
+        @media (min-width: 769px) and (max-width: 1024px) {
+          div[style*="padding: 50px 80px"] {
+            padding: 32px 40px !important;
+          }
+
+          div[style*="padding: 30px 80px"] {
+            padding: 24px 40px !important;
           }
         }
       `}</style>

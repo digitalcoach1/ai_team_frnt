@@ -4,7 +4,7 @@ import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { UserButton } from "@clerk/nextjs"
-import { Home } from "lucide-react"
+import { Home } from 'lucide-react'
 
 interface Message {
   text: string
@@ -24,6 +24,7 @@ export default function NikoAI() {
   const [isLoading, setIsLoading] = useState(false)
   const [useMemory, setUseMemory] = useState(true)
   const [sidebarVisible, setSidebarVisible] = useState(true)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [currentChatId, setCurrentChatId] = useState("default")
   const [chats, setChats] = useState<{ [key: string]: Chat }>({})
 
@@ -914,21 +915,236 @@ export default function NikoAI() {
           cursor: not-allowed;
         }
 
-        @media (max-width: 768px) {
+        .niko-mobile-menu-btn {
+          display: none;
+          background: rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          padding: 10px;
+          border-radius: 8px;
+          cursor: pointer;
+          color: #ffffff;
+          transition: all 0.2s ease;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .niko-mobile-menu-btn:hover {
+          background: rgba(255, 255, 255, 0.2);
+        }
+
+        .niko-sidebar-close-btn {
+          display: none;
+          background: transparent;
+          border: none;
+          color: #64748b;
+          padding: 8px;
+          cursor: pointer;
+          font-size: 24px;
+          line-height: 1;
+          transition: color 0.2s ease;
+        }
+
+        .niko-sidebar-close-btn:hover {
+          color: #235E84;
+        }
+
+        @media (max-width: 1024px) {
+          .niko-sidebar {
+            width: 280px;
+            min-width: 280px;
+          }
+
+          .niko-chat-header {
+            padding: 16px 24px;
+          }
+
           .niko-messages {
-            padding: 20px;
+            padding: 24px 32px;
           }
+
           .niko-input-container {
-            padding: 16px 20px;
+            padding: 20px 24px;
           }
+
           .niko-message {
-            max-width: 95%;
+            max-width: 92%;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .niko-mobile-menu-btn {
+            display: flex;
+          }
+
+          .niko-sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 300px;
+            min-width: 300px;
+            z-index: 1000;
+            transform: translateX(-100%);
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+          }
+
+          .niko-sidebar.mobile-open {
+            transform: translateX(0);
+          }
+
+          .niko-sidebar.hidden {
+            transform: translateX(-100%);
+          }
+
+          .niko-sidebar-close-btn {
+            display: block;
+          }
+
+          .niko-toggle-btn {
+            display: none;
+          }
+
+          .niko-chat-header {
+            padding: 12px 16px;
+            min-height: 60px;
+          }
+
+          .niko-chat-title {
+            font-size: 16px;
+          }
+
+          .niko-messages {
+            padding: 16px;
+          }
+
+          .niko-input-container {
+            padding: 12px 16px;
+          }
+
+          .niko-message {
+            max-width: 100%;
+            gap: 12px;
+            margin-bottom: 20px;
+          }
+
+          .niko-message-avatar {
+            width: 32px;
+            height: 32px;
+            font-size: 12px;
+          }
+
+          .niko-message-content {
+            padding: 14px 16px;
+          }
+
+          .niko-message-text {
+            font-size: 14px;
+          }
+
+          .niko-home-btn,
+          .niko-mobile-menu-btn {
+            padding: 8px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .niko-sidebar {
+            width: 280px;
+            min-width: 280px;
+          }
+
+          .niko-sidebar-header {
+            padding: 16px;
+          }
+
+          .niko-brand-title {
+            font-size: 18px;
+          }
+
+          .niko-profile-avatar {
+            width: 36px;
+            height: 36px;
+          }
+
+          .niko-new-chat-btn {
+            padding: 12px 16px;
+            font-size: 13px;
+          }
+
+          .niko-chat-header {
+            padding: 10px 12px;
+          }
+
+          .niko-chat-title {
+            font-size: 14px;
+          }
+
+          .niko-messages {
+            padding: 12px;
+          }
+
+          .niko-message {
+            gap: 10px;
+            margin-bottom: 16px;
+          }
+
+          .niko-message-avatar {
+            width: 28px;
+            height: 28px;
+          }
+
+          .niko-message-content {
+            padding: 12px 14px;
+          }
+
+          .niko-message-text {
+            font-size: 13px;
+          }
+
+          .niko-input-container {
+            padding: 10px 12px;
+          }
+
+          .niko-input-wrapper {
+            padding: 10px 12px;
+          }
+
+          .niko-input {
+            font-size: 14px;
+          }
+
+          .niko-send-btn {
+            width: 36px;
+            height: 36px;
+          }
+        }
+
+        @media (max-width: 360px) {
+          .niko-sidebar {
+            width: 260px;
+            min-width: 260px;
+          }
+
+          .niko-chat-title {
+            font-size: 13px;
+          }
+
+          .niko-message-text {
+            font-size: 12px;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .niko-messages::-webkit-scrollbar,
+          .niko-chat-list-wrapper::-webkit-scrollbar,
+          .niko-agents-list::-webkit-scrollbar {
+            width: 4px;
           }
         }
       `}</style>
 
       <div className="niko-container">
-        <div className={`niko-sidebar ${!sidebarVisible ? "hidden" : ""}`}>
+        <div className={`niko-sidebar ${!sidebarVisible ? "hidden" : ""} ${isMobileMenuOpen ? "mobile-open" : ""}`}>
           <div className="niko-sidebar-header">
             <div className="niko-brand-header">
               <div className="niko-brand-section">
@@ -937,6 +1153,15 @@ export default function NikoAI() {
                 </div>
                 <div className="niko-brand-title">Niko AI</div>
               </div>
+              <button
+                className="niko-sidebar-close-btn"
+                onClick={() => {
+                  setIsMobileMenuOpen(false)
+                }}
+                title="Chiudi menu"
+              >
+                ×
+              </button>
             </div>
             <button className="niko-new-chat-btn" onClick={createNewChat}>
               <span>+</span> Nuova Chat
@@ -1032,7 +1257,7 @@ export default function NikoAI() {
                 <Link href="/" className="niko-agent-item">
                   <div className="niko-agent-avatar">
                     <img
-                      src="https://www.ai-scaleup.com/wp-content/uploads/2025/02/Mike-AI-digital-marketing-mg.png"
+                      src="https://www.ai-scaleup.com/wp-content/uploads/2024/11/Gary-AI-SMMg-icon.png"
                       alt="Mike"
                     />
                   </div>
@@ -1041,7 +1266,7 @@ export default function NikoAI() {
                 <Link href="/alex-ai" className="niko-agent-item">
                   <div className="niko-agent-avatar">
                     <img
-                      src="https://www.ai-scaleup.com/wp-content/uploads/2025/03/David-AI-Ai-Specialist-social-ads.png"
+                      src="https://www.shutterstock.com/image-vector/vector-flat-illustration-grayscale-avatar-600nw-2264922221.jpg"
                       alt="Alex"
                     />
                   </div>
@@ -1064,6 +1289,17 @@ export default function NikoAI() {
         <div className="niko-chat-container">
           <div className="niko-chat-header">
             <div className="niko-header-left">
+              <button
+                className="niko-mobile-menu-btn"
+                onClick={() => setIsMobileMenuOpen(true)}
+                title="Mostra menu"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="3" y1="12" x2="21" y2="12"></line>
+                  <line x1="3" y1="6" x2="21" y2="6"></line>
+                  <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+              </button>
               <button
                 className="niko-toggle-btn"
                 onClick={() => {

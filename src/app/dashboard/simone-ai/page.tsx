@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
-import { Home } from "lucide-react"
+import { Home } from 'lucide-react'
 import { UserButton } from "@clerk/nextjs"
 
 interface Message {
@@ -382,6 +382,21 @@ export default function SimoneAI() {
         .simone-scrollbar::-webkit-scrollbar-thumb:hover {
           background: #555;
         }
+
+        /* Added responsive breakpoints for mobile devices */
+        @media (max-width: 768px) {
+          .sidebar-container {
+            position: fixed !important;
+            left: 0 !important;
+            top: 0 !important;
+            height: 100vh !important;
+            z-index: 1000 !important;
+            transform: translateX(-100%) !important;
+          }
+          .sidebar-container.visible {
+            transform: translateX(0) !important;
+          }
+        }
       `}</style>
 
       <div
@@ -391,11 +406,12 @@ export default function SimoneAI() {
           display: "flex",
           overflow: "hidden",
           background: "#ffffff",
-          minWidth: "900px",
+          minWidth: "320px", // Changed from 900px to 320px for mobile support
         }}
       >
         {/* Sidebar */}
         <div
+          className={`sidebar-container ${sidebarVisible ? "visible" : ""}`}
           style={{
             width: sidebarVisible ? "320px" : "0",
             minWidth: sidebarVisible ? "320px" : "0",
@@ -438,6 +454,26 @@ export default function SimoneAI() {
                   Simone AI
                 </div>
               </div>
+              <button
+                onClick={() => {
+                  setSidebarVisible(false)
+                  localStorage.setItem("simone-ai-sidebar-visible", "false")
+                }}
+                style={{
+                  display: "none",
+                  background: "rgba(239, 68, 68, 0.1)",
+                  border: "1px solid rgba(239, 68, 68, 0.2)",
+                  color: "#ef4444",
+                  padding: "8px",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontSize: "18px",
+                  transition: "all 0.2s ease",
+                }}
+                className="mobile-close-btn"
+              >
+                ×
+              </button>
             </div>
 
             <button
@@ -861,7 +897,7 @@ export default function SimoneAI() {
             style={{
               background: "#235E84",
               color: "#ffffff",
-              padding: "20px 40px",
+              padding: "20px 40px", // Will be responsive
               borderBottom: "1px solid #e2e8f0",
               display: "flex",
               alignItems: "center",
@@ -889,17 +925,24 @@ export default function SimoneAI() {
                   justifyContent: "center",
                 }}
                 title="Mostra/Nascondi conversazioni"
+                className="sidebar-toggle-btn"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="desktop-icon">
                   {sidebarVisible ? (
                     <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
                   ) : (
                     <path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z" />
                   )}
                 </svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mobile-icon" style={{ display: "none" }}>
+                  <line x1="3" y1="6" x2="21" y2="6"></line>
+                  <line x1="3" y1="12" x2="21" y2="12"></line>
+                  <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
               </button>
               <div
                 style={{ fontFamily: "Montserrat, sans-serif", fontSize: "20px", fontWeight: 600, color: "#ffffff" }}
+                className="header-title"
               >
                 Simone AI - Consulenza SEO Copywriting
               </div>
@@ -949,7 +992,7 @@ export default function SimoneAI() {
           {/* Messages */}
           <div
             className="simone-scrollbar"
-            style={{ flex: 1, overflowY: "auto", padding: "50px 80px", background: "#ffffff", minHeight: 0 }}
+            style={{ flex: 1, overflowY: "auto", padding: "50px 80px", background: "#ffffff", minHeight: 0 }} // Padding will be responsive
           >
             {messages.map((message, index) => (
               <div
@@ -1063,7 +1106,7 @@ export default function SimoneAI() {
           </div>
 
           {/* Input */}
-          <div style={{ padding: "30px 80px", borderTop: "1px solid #e2e8f0", background: "#ffffff" }}>
+          <div style={{ padding: "30px 80px", borderTop: "1px solid #e2e8f0", background: "#ffffff" }}> {/* Padding will be responsive */}
             <div
               style={{
                 display: "flex",
@@ -1150,6 +1193,58 @@ export default function SimoneAI() {
           30% {
             transform: translateY(-10px);
             opacity: 1;
+          }
+        }
+
+        /* Added responsive styles for all breakpoints */
+        @media (max-width: 1024px) {
+          .header-title {
+            font-size: 18px !important;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .mobile-close-btn {
+            display: block !important;
+          }
+          .desktop-icon {
+            display: none !important;
+          }
+          .mobile-icon {
+            display: block !important;
+          }
+          .header-title {
+            font-size: 16px !important;
+          }
+          div[style*="padding: 20px 40px"] {
+            padding: 16px 20px !important;
+          }
+          div[style*="padding: 50px 80px"] {
+            padding: 24px 16px !important;
+          }
+          div[style*="padding: 30px 80px"] {
+            padding: 16px !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .header-title {
+            font-size: 14px !important;
+          }
+          div[style*="padding: 16px 20px"] {
+            padding: 12px 16px !important;
+          }
+          div[style*="padding: 24px 16px"] {
+            padding: 16px 12px !important;
+          }
+        }
+
+        @media (max-width: 360px) {
+          .header-title {
+            font-size: 13px !important;
+          }
+          button {
+            padding: 8px !important;
           }
         }
       `}</style>

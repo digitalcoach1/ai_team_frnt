@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useRef, useEffect } from "react"
 import { UserButton } from "@clerk/nextjs"
 import Link from "next/link"
-import { Home } from "lucide-react"
+import { Home } from 'lucide-react'
 
 interface Message {
   text: string
@@ -164,7 +164,7 @@ export default function LaraAI() {
       '<code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:0.9em;">$1</code>',
     )
     t = t.replace(
-      /\[([^\]]+?)\]$$(https?:\/\/[^\s)]+)$$/g,
+      /\[([^\]]+?)\]\$\$(https?:\/\/[^\s)]+)\$\$/g,
       '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:#235E84;text-decoration:underline;">$1</a>',
     )
     t = t.replace(/\n/g, "<br>")
@@ -396,9 +396,62 @@ export default function LaraAI() {
           border-right: none;
         }
 
+        /* Added mobile responsive styles for sidebar */
+        @media (max-width: 768px) {
+          .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 280px;
+            min-width: 280px;
+            z-index: 1000;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+          }
+
+          .sidebar.hidden {
+            transform: translateX(-100%);
+          }
+
+          .sidebar:not(.hidden)::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 280px;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: -1;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .sidebar {
+            width: 260px;
+            min-width: 260px;
+          }
+
+          .sidebar:not(.hidden)::before {
+            left: 260px;
+          }
+        }
+
         .sidebar-header {
           padding: 20px;
           border-bottom: 1px solid var(--sidebar-border);
+        }
+
+        /* Added responsive padding for sidebar header */
+        @media (max-width: 768px) {
+          .sidebar-header {
+            padding: 16px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .sidebar-header {
+            padding: 12px;
+          }
         }
 
         .brand-header {
@@ -406,6 +459,36 @@ export default function LaraAI() {
           align-items: center;
           justify-content: space-between;
           margin-bottom: 24px;
+        }
+
+        /* Added responsive spacing for brand header */
+        @media (max-width: 768px) {
+          .brand-header {
+            margin-bottom: 16px;
+          }
+        }
+
+        /* Added mobile close button styles */
+        .mobile-close-btn {
+          display: none;
+          background: transparent;
+          border: none;
+          color: var(--sidebar-foreground);
+          cursor: pointer;
+          padding: 4px;
+          font-size: 24px;
+          line-height: 1;
+          transition: color 0.2s ease;
+        }
+
+        .mobile-close-btn:hover {
+          color: var(--primary);
+        }
+
+        @media (max-width: 768px) {
+          .mobile-close-btn {
+            display: block;
+          }
         }
 
         .brand-section {
@@ -425,6 +508,14 @@ export default function LaraAI() {
           background: var(--primary);
         }
 
+        /* Added responsive avatar size */
+        @media (max-width: 480px) {
+          .profile-avatar {
+            width: 32px;
+            height: 32px;
+          }
+        }
+
         .profile-avatar img {
           width: 100%;
           height: 100%;
@@ -436,6 +527,19 @@ export default function LaraAI() {
           font-size: 20px;
           font-weight: 600;
           color: var(--sidebar-foreground);
+        }
+
+        /* Added responsive font size for brand title */
+        @media (max-width: 768px) {
+          .brand-title {
+            font-size: 18px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .brand-title {
+            font-size: 16px;
+          }
         }
 
         .new-chat-button {
@@ -453,6 +557,14 @@ export default function LaraAI() {
           gap: 8px;
           transition: all 0.2s ease;
           width: 100%;
+        }
+
+        /* Added responsive padding for new chat button */
+        @media (max-width: 768px) {
+          .new-chat-button {
+            padding: 12px 16px;
+            font-size: 13px;
+          }
         }
 
         .new-chat-button:hover {
@@ -713,16 +825,64 @@ export default function LaraAI() {
           min-height: 80px;
         }
 
+        /* Added responsive padding and height for chat header */
+        @media (max-width: 1024px) {
+          .chat-header {
+            padding: 16px 24px;
+            min-height: 70px;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .chat-header {
+            padding: 12px 16px;
+            min-height: 60px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .chat-header {
+            padding: 10px 12px;
+            min-height: 56px;
+          }
+        }
+
         .header-left {
           display: flex;
           align-items: center;
           gap: 16px;
         }
 
+        /* Added responsive gap for header left */
+        @media (max-width: 768px) {
+          .header-left {
+            gap: 12px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .header-left {
+            gap: 8px;
+          }
+        }
+
         .header-right {
           display: flex;
           align-items: center;
           gap: 16px;
+        }
+
+        /* Added responsive gap for header right */
+        @media (max-width: 768px) {
+          .header-right {
+            gap: 12px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .header-right {
+            gap: 8px;
+          }
         }
 
         .home-button {
@@ -739,6 +899,21 @@ export default function LaraAI() {
           cursor: pointer;
         }
 
+        /* Added responsive size for home button */
+        @media (max-width: 768px) {
+          .home-button {
+            width: 36px;
+            height: 36px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .home-button {
+            width: 32px;
+            height: 32px;
+          }
+        }
+
         .home-button:hover {
           background: rgba(255, 255, 255, 0.2);
         }
@@ -750,11 +925,95 @@ export default function LaraAI() {
           color: #ffffff;
         }
 
+        /* Added responsive font size for chat title */
+        @media (max-width: 1024px) {
+          .chat-title {
+            font-size: 18px;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .chat-title {
+            font-size: 16px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .chat-title {
+            font-size: 14px;
+          }
+        }
+
+        /* Added mobile hamburger menu button styles */
+        .toggle-sidebar-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 40px;
+          height: 40px;
+          background: transparent;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 8px;
+          color: #ffffff;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .toggle-sidebar-btn:hover {
+          background: rgba(255, 255, 255, 0.1);
+        }
+
+        @media (max-width: 768px) {
+          .toggle-sidebar-btn {
+            width: 36px;
+            height: 36px;
+          }
+
+          .toggle-sidebar-btn svg {
+            display: none;
+          }
+
+          .toggle-sidebar-btn::before {
+            content: '☰';
+            font-size: 20px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .toggle-sidebar-btn {
+            width: 32px;
+            height: 32px;
+          }
+
+          .toggle-sidebar-btn::before {
+            font-size: 18px;
+          }
+        }
+
         .chat-messages {
           flex: 1;
           overflow-y: auto;
           padding: 50px 80px;
           background: var(--background);
+        }
+
+        /* Added responsive padding for chat messages */
+        @media (max-width: 1024px) {
+          .chat-messages {
+            padding: 40px 40px;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .chat-messages {
+            padding: 24px 20px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .chat-messages {
+            padding: 16px 12px;
+          }
         }
 
         .message {
@@ -764,6 +1023,23 @@ export default function LaraAI() {
           gap: 20px;
           animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
           max-width: 90%;
+        }
+
+        /* Added responsive spacing and width for messages */
+        @media (max-width: 768px) {
+          .message {
+            margin-bottom: 24px;
+            gap: 12px;
+            max-width: 95%;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .message {
+            margin-bottom: 20px;
+            gap: 10px;
+            max-width: 98%;
+          }
         }
 
         @keyframes fadeInUp {
@@ -795,6 +1071,23 @@ export default function LaraAI() {
           overflow: hidden;
         }
 
+        /* Added responsive size for message avatar */
+        @media (max-width: 768px) {
+          .message-avatar {
+            width: 36px;
+            height: 36px;
+            font-size: 13px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .message-avatar {
+            width: 32px;
+            height: 32px;
+            font-size: 12px;
+          }
+        }
+
         .message-avatar img {
           width: 100%;
           height: 100%;
@@ -820,6 +1113,21 @@ export default function LaraAI() {
           min-width: 200px;
         }
 
+        /* Added responsive padding for message content */
+        @media (max-width: 768px) {
+          .message-content {
+            padding: 16px 18px;
+            min-width: 150px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .message-content {
+            padding: 12px 14px;
+            min-width: 100px;
+          }
+        }
+
         .message.user .message-content {
           background: #235E84;
           color: #ffffff;
@@ -830,6 +1138,21 @@ export default function LaraAI() {
           color: var(--card-foreground);
           line-height: 1.6;
           font-size: 15px;
+        }
+
+        /* Added responsive font size for message text */
+        @media (max-width: 768px) {
+          .message-text {
+            font-size: 14px;
+            line-height: 1.5;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .message-text {
+            font-size: 13px;
+            line-height: 1.4;
+          }
         }
 
         .message.user .message-text {
@@ -887,6 +1210,25 @@ export default function LaraAI() {
           background: var(--background);
         }
 
+        /* Added responsive padding for input container */
+        @media (max-width: 1024px) {
+          .input-container {
+            padding: 24px 40px;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .input-container {
+            padding: 16px 20px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .input-container {
+            padding: 12px 12px;
+          }
+        }
+
         .input-wrapper {
           display: flex;
           align-items: flex-end;
@@ -896,6 +1238,21 @@ export default function LaraAI() {
           border-radius: var(--radius);
           padding: 12px 16px;
           transition: all 0.2s ease;
+        }
+
+        /* Added responsive padding for input wrapper */
+        @media (max-width: 768px) {
+          .input-wrapper {
+            gap: 10px;
+            padding: 10px 12px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .input-wrapper {
+            gap: 8px;
+            padding: 8px 10px;
+          }
         }
 
         .input-wrapper:focus-within {
@@ -916,6 +1273,19 @@ export default function LaraAI() {
           font-family: inherit;
         }
 
+        /* Added responsive font size for input */
+        @media (max-width: 768px) {
+          .message-input {
+            font-size: 14px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .message-input {
+            font-size: 13px;
+          }
+        }
+
         .message-input::placeholder {
           color: var(--muted-foreground);
         }
@@ -933,6 +1303,31 @@ export default function LaraAI() {
           justify-content: center;
           transition: all 0.2s ease;
           flex-shrink: 0;
+        }
+
+        /* Added responsive size for send button */
+        @media (max-width: 768px) {
+          .send-button {
+            width: 36px;
+            height: 36px;
+          }
+
+          .send-button svg {
+            width: 14px;
+            height: 14px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .send-button {
+            width: 32px;
+            height: 32px;
+          }
+
+          .send-button svg {
+            width: 12px;
+            height: 12px;
+          }
         }
 
         .send-button:hover:not(:disabled) {
@@ -960,6 +1355,13 @@ export default function LaraAI() {
                 </div>
                 <div className="brand-title">Lara AI</div>
               </div>
+              <button
+                className="mobile-close-btn"
+                onClick={() => setSidebarVisible(false)}
+                title="Chiudi menu"
+              >
+                ×
+              </button>
             </div>
             <button className="new-chat-button" onClick={createNewChat}>
               <span>+</span> Nuova Chat
